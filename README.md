@@ -44,8 +44,7 @@ Clients unable to attach headers may use per-call `_meta` or
 ```
 
 Headers are safer because inline credentials can enter model context, client
-logs, traces, or transcripts. Full precedence and aliases are documented in
-[docs/authentication.md](docs/authentication.md).
+logs, traces, or transcripts.
 
 ## Exact tool catalog
 
@@ -65,9 +64,7 @@ logs, traces, or transcripts. Full precedence and aliases are documented in
 | 12 | `assinafy_resend_notification` | `document_id`, `assignment_id`, `signer_id` | Resends one signer notification |
 | 13 | `assinafy_verify_document` | `hash` | Verifies a signed-document SHA-1 hash through Assinafy's public endpoint |
 
-Unknown input properties are rejected by the generated MCP schemas. The full
-field-by-field contract, outputs, limits, and side-effect annotations are in
-[docs/tools.md](docs/tools.md).
+Unknown input properties are rejected by the generated MCP schemas.
 
 ## Send a PDF for signature
 
@@ -160,8 +157,7 @@ returned as `structuredContent`. Safe reads may retry HTTP 429 and transient 5xx
 responses; mutating calls are never retried automatically.
 
 The server limits MCP requests to 40 MiB, decoded PDFs to 25 MiB, JSON responses
-to 16 MiB, binary responses to 64 MiB, and error responses to 1 MiB. See
-[docs/errors.md](docs/errors.md) for recovery and retry guidance.
+to 16 MiB, binary responses to 64 MiB, and error responses to 1 MiB.
 
 ## Service endpoints
 
