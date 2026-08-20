@@ -5,23 +5,14 @@ exactly **13 operational document-signing tools**. It does not expose account,
 user, API-key, logo, workspace, webhook, tag, field-definition, standalone
 signer-management, or signer-session administration tools.
 
-## Endpoint and environment
+## Endpoint
 
-Connect with MCP Streamable HTTP:
-
-```text
-POST https://<your-mcp-host>/mcp
-```
-
-The MCP server calls Assinafy production by default:
+The server is hosted by Assinafy — there is nothing to deploy. Connect with MCP
+Streamable HTTP:
 
 ```text
-https://api.assinafy.com.br/v1
+POST https://mcp.assinafy.com.br/mcp
 ```
-
-Set `ASSINAFY_BASE_URL=https://sandbox.assinafy.com.br/v1` only for a sandbox
-deployment. This setting belongs to the server deployment, not individual tool
-arguments.
 
 ## Authentication
 
@@ -33,12 +24,9 @@ X-Api-Key: <ASSINAFY_API_KEY>
 X-Assinafy-Account-Id: <ASSINAFY_ACCOUNT_ID>
 ```
 
-Use credentials for the same environment as `ASSINAFY_BASE_URL`: production
-credentials for production and sandbox credentials for sandbox.
-
-Assinafy also documents `Authorization: Bearer <token>`. The MCP server only
-passes through an already-issued bearer token when no API key is present. It
-does not log in, exchange an API key, or obtain a bearer token.
+`Authorization: Bearer <token>` also works. The MCP server only passes through
+an already-issued bearer token when no API key is present. It does not log in,
+exchange an API key, or obtain a bearer token.
 
 Clients unable to attach headers may use per-call `_meta` or
 `arguments.auth`:
@@ -108,8 +96,8 @@ duplicate emails are rejected case-insensitively.
 The result contains the uploaded `document`, created `assignment`, and ordered
 `signer_ids`. Assinafy may reuse an existing signer with the exact email.
 
-This upstream workflow is not transactional. If work fails after upload, the
-MCP error includes the retained document ID; inspect or delete that document
+This workflow is not transactional. If work fails after upload, the MCP error
+includes the retained document ID; inspect or delete that document
 instead of blindly retrying and creating a duplicate.
 
 ## Create from a template
@@ -142,10 +130,6 @@ role IDs, then call:
 Each template role ID may appear once. Signers are created or reused by exact
 email and use Email verification and notification.
 
-`assinafy_get_template` uses a sandbox-confirmed compatibility endpoint that is
-not present in the audited public OpenAPI snapshot. The documented template
-list and create operations remain the source-of-truth API contracts.
-
 ## Follow-up inputs
 
 | Tool | Optional input |
@@ -156,8 +140,8 @@ list and create operations remain the source-of-truth API contracts.
 | `assinafy_get_template` | `account_id` |
 
 Account IDs are required only for account-scoped upload, list, signer, and
-template operations. Global document/assignment paths still require a valid API
-key or bearer token but do not require an account ID in their URL.
+template operations. The remaining document and assignment tools still require a
+valid API key or bearer token, but take no account ID.
 
 ## Side effects and approvals
 
@@ -167,7 +151,7 @@ key or bearer token but do not require an account ID in their URL.
   send email and may incur Assinafy usage or cost.
 - Downloads return base64 and can consume substantial model context.
 - `assinafy_verify_document` is read-only and deliberately sends no workspace
-  credential upstream.
+  credential.
 
 ## Errors and operational limits
 
@@ -179,18 +163,11 @@ The server limits MCP requests to 40 MiB, decoded PDFs to 25 MiB, JSON responses
 to 16 MiB, binary responses to 64 MiB, and error responses to 1 MiB. See
 [docs/errors.md](docs/errors.md) for recovery and retry guidance.
 
-## Deployment readiness
+## Service endpoints
 
-- `GET /healthz` and `GET /readyz` return readiness status.
-- `GET /mcp` returns server identity and the exact 13-tool manifest.
-- Production defaults to `https://api.assinafy.com.br/v1`; sandbox requires the
-  explicit base URL override.
-- The Docker builder uses Go 1.27, matching `go.mod`.
-- Production ingress must provide HTTPS, authenticate access to `/mcp`, and
-  apply tenant-aware rate limits.
-- Tenant API keys and account IDs are request-scoped and must not be stored in
-  the server environment.
-
-The complete audit and upstream scope accounting are in
-[docs/AUDIT_REPORT.md](docs/AUDIT_REPORT.md) and
-[docs/api-coverage.md](docs/api-coverage.md).
+- `GET https://mcp.assinafy.com.br/healthz` and `/readyz` return service status.
+- `GET https://mcp.assinafy.com.br/mcp` returns server identity and the exact
+  13-tool manifest.
+- All traffic is HTTPS and rate limited per tenant.
+- Your API key and account ID are request-scoped: they are read from each
+  request and never stored server-side.
