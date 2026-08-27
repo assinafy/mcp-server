@@ -85,10 +85,10 @@ Use `assinafy_send_document_for_signature` for the common end-to-end flow:
 }
 ```
 
-Optional inputs are `account_id`, `max_wait_secs` (default 30, maximum 600),
-and `poll_secs` (default 2). The decoded file limit is 25 MiB. The file must be
-a non-empty PDF, every signer must have `full_name` and a valid `email`, and
-duplicate emails are rejected case-insensitively.
+Optional inputs are `message`, `expires_at`, `account_id`, `max_wait_secs`
+(default 30, maximum 600), and `poll_secs` (default 2). The decoded file limit
+is 25 MiB. The file must be a non-empty PDF, every signer must have `full_name`
+and a valid `email`, and duplicate emails are rejected case-insensitively.
 
 The result contains the uploaded `document`, created `assignment`, and ordered
 `signer_ids`. Assinafy may reuse an existing signer with the exact email.
@@ -137,8 +137,9 @@ email and use Email verification and notification.
 | `assinafy_get_template` | `account_id` |
 
 Account IDs are required only for account-scoped upload, list, signer, and
-template operations. The remaining document and assignment tools still require a
-valid API key or bearer token, but take no account ID.
+template operations. Except for public `assinafy_verify_document`, the remaining
+document and assignment tools require a valid API key or bearer token, but take
+no account ID.
 
 ## Side effects and approvals
 
@@ -164,6 +165,6 @@ to 16 MiB, binary responses to 64 MiB, and error responses to 1 MiB.
 - `GET https://mcp.assinafy.com.br/healthz` and `/readyz` return service status.
 - `GET https://mcp.assinafy.com.br/mcp` returns server identity and the exact
   13-tool manifest.
-- All traffic is HTTPS and rate limited per tenant.
+- The hosted endpoint uses HTTPS.
 - Your API key and account ID are request-scoped: they are read from each
   request and never stored server-side.
