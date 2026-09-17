@@ -11,9 +11,9 @@ enter a client ID, client secret, API key, or workspace header. Sign in to Assin
 choose one workspace, and consent to the requested permissions. The server enforces
 that workspace on every operation.
 
-The [deployment prerequisites](#deployment-readiness) must be available before
-connecting. Other clients use CIMD or the authorization server's DCR fallback as
-described below.
+Connecting and listing the tools need no sign-in, so a client can show what the
+server offers first; consent is requested when a tool needs your workspace. See
+[connection status](#connection-status) for what each client needs today.
 
 ## Codex
 
@@ -128,13 +128,21 @@ any other credential in prompts, tool arguments, or `_meta`; requests carrying t
 are rejected.
 
 You configure the MCP URL and nothing else. Your client identifies itself to
-Assinafy, and the consent screen asks once for
+Assinafy, and the consent screen asks for
 `account:read documents:read documents:write templates:read` — the whole tool
-catalog — so a first send is not refused halfway. `templates:write` is never
-requested: no tool modifies a template. A tool whose permission is missing returns
-HTTP 403 naming the full scope set, before performing any document write. Complete
-fresh consent and retry only after authorization. Request `offline_access` when the
-client supports refresh tokens for background access.
+catalog — so one approval covers everything and a first send is not refused
+halfway. `templates:write` is never requested: no tool modifies a template.
+Request `offline_access` when the client supports refresh tokens for background
+access.
+
+**Assinafy enforces permissions, and this server reports them.** Access tokens
+are opaque, so the server cannot read what a grant allows and cannot refuse a
+write in advance. A refused call returns Assinafy's own message naming the
+missing scope. This matters for multi-step tools: under a partial grant,
+`assinafy_send_document_for_signature` can upload the PDF and then be refused at
+the next step. Its error carries the retained `document_id`, so continue from
+`assinafy_create_assignment` rather than uploading again. Approving the full set
+at connect time is what keeps this rare.
 
 For Codex, explicitly authorize the complete document and template flow with:
 
@@ -455,8 +463,9 @@ Binary responses are limited to 64 MiB before base64 encoding.
 
 Call `assinafy_verify_document` with the signed document's Assinafy SHA-1 signature
 hash. Use the actual verification hash supplied with the signed document, not the
-document ID or an invented value. The MCP connection remains authenticated even
-though verification is public upstream. Report the returned `is_valid` result.
+document ID or an invented value. This is the one tool that works without
+connecting: it checks a public signature record and touches nothing belonging to
+a workspace. Report the returned `is_valid` result.
 
 People complete signatures, signer-side rejection, and required verification in
 Assinafy. Those endpoints use a signer's access code, outside the workspace OAuth2
@@ -483,23 +492,40 @@ No mutating API request is automatically retried by the MCP server.
 | Result | Client action |
 |---|---|
 | HTTP 401 | Let the client refresh its grant or reconnect through Assinafy consent. |
-| HTTP 403 with `insufficient_scope` | Authorize the requested scope set and retry after consent; the denied call performed no document writes. |
+| HTTP 403 with `insufficient_scope` | Authorize the requested scope set and retry after consent. |
+| Tool error naming a missing scope | Assinafy refused the call. A multi-step tool may have completed earlier steps; read its error for a retained `document_id` and continue from there. |
 | Tool result with `isError: true` | Read the Assinafy error and inspect the current document before retrying a mutation. |
 | Invalid contact, expired assignment, or unavailable artifact | Correct the request or wait for the required lifecycle state. |
 | Rate limit or uncertain network response | Respect retry timing; inspect state and delivery history before repeating a write. |
-| HTTP 503 during authentication | The operator must restore or correct the OAuth provider; API-key fallback is not part of the client flow. |
+| HTTP 429 | Assinafy is rate-limiting authorization checks; honour `Retry-After`. |
+| HTTP 503 during authentication | Assinafy was unreachable while the token was checked; retry. API-key fallback is not part of the client flow. |
 
 See error recovery for full response semantics and
 tool inputs for field reference.
 
-## Deployment readiness
+## Connection status
 
-Assinafy staging advertises CIMD, PKCE S256, and public-client authentication
-`none`, which is everything this server needs. What remains is per-client trust:
-each client's Client ID Metadata Document URL and its exact callbacks must be on
-Assinafy's CIMD trust list, and clients that rely on dynamic registration need
-`OAUTH_DYNAMIC_REGISTRATION` enabled. Until a client is trusted, its token request
-is refused with `invalid_client` and the connection cannot complete.
+The server is live at `https://mcp.assinafy.com.br/mcp`. Connecting and listing
+the 28 tools works today with no credential — try it:
+
+```bash
+curl -sS -X POST https://mcp.assinafy.com.br/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+Completing a sign-in needs two things on Assinafy's authorization server, and
+both are configuration rather than code:
+
+| | |
+|---|---|
+| **Client trust** | A client identifies itself with a Client ID Metadata Document, and Assinafy accepts one only under a prefix on its trust list. A client that is not listed is refused with `invalid_client` and falls back to dynamic registration, which is disabled — which is why some clients report "does not support dynamic client registration". Claude Code is already trusted. |
+| **Resource registration** | A client sends the `resource` value this server publishes, `https://mcp.assinafy.com.br/mcp`. Assinafy answers `invalid_target` until that URL is registered as a resource it issues tokens for. |
+
+Clients with no CIMD support — Cursor and Gemini CLI among them — need dynamic
+registration enabled instead.
 
 The client's OAuth2 credentials stay in its own token store. The server has none:
-it verifies the bearer token it is given and forwards it, storing nothing.
+it verifies the bearer token by presenting it to Assinafy, forwards it unchanged,
+and stores nothing.
