@@ -12,8 +12,9 @@ choose one workspace, and consent to the requested permissions. The server enfor
 that workspace on every operation.
 
 Connecting and listing the tools need no sign-in, so a client can show what the
-server offers first; consent is requested when a tool needs your workspace. See
-[connection status](#connection-status) for what each client needs today.
+server offers first; consent is requested when a tool needs your workspace. The
+clients below identify themselves with a Client ID Metadata Document, which is
+how Assinafy recognises them; see [connection status](#connection-status).
 
 ## Codex
 
@@ -80,44 +81,6 @@ Start the server and complete the browser authorization prompt. VS Code selects
 CIMD when advertised and supports requesting additional scopes when a tool needs
 them. See [VS Code authentication support](https://code.visualstudio.com/updates/v1_106#_authentication-client-id-metadata-document-authentication-flow)
 and [MCP configuration](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
-
-## Cursor
-
-Add the remote server to Cursor's `mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "assinafy": {
-      "url": "https://mcp.assinafy.com.br/mcp"
-    }
-  }
-}
-```
-
-Complete OAuth when Cursor prompts. Its documented automatic registration path
-uses DCR, so enable Assinafy's registration endpoint for this setup. Configure the
-authorization server's redirect policy for the intended desktop or hosted Cursor
-surface. See [Cursor MCP configuration](https://cursor.com/docs/mcp).
-
-## Gemini CLI
-
-Add the following to Gemini CLI's settings:
-
-```json
-{
-  "mcpServers": {
-    "assinafy": {
-      "httpUrl": "https://mcp.assinafy.com.br/mcp"
-    }
-  }
-}
-```
-
-Use `httpUrl` for Streamable HTTP. Gemini CLI discovers OAuth and registers through
-DCR when available. Enable Assinafy's registration endpoint and allow the exact
-loopback callback path with an ephemeral port. Browser access is needed to complete
-consent. See [Gemini CLI MCP authentication](https://geminicli.com/docs/tools/mcp-server/#oauth-support-for-remote-mcp-servers).
 
 ## Workspaces and permissions
 
@@ -520,11 +483,8 @@ both are configuration rather than code:
 
 | | |
 |---|---|
-| **Client trust** | A client identifies itself with a Client ID Metadata Document, and Assinafy accepts one only under a prefix on its trust list. A client that is not listed is refused with `invalid_client` and falls back to dynamic registration, which is disabled — which is why some clients report "does not support dynamic client registration". Claude Code is already trusted. |
+| **Client trust** | A client identifies itself with a Client ID Metadata Document, and Assinafy accepts one only under a prefix on its trust list. A client that is not listed is refused with `invalid_client`. Some clients then report that the server "does not support dynamic client registration" — that message describes their fallback, not the cause. Claude Code is already trusted. |
 | **Resource registration** | A client sends the `resource` value this server publishes, `https://mcp.assinafy.com.br/mcp`. Assinafy answers `invalid_target` until that URL is registered as a resource it issues tokens for. |
-
-Clients with no CIMD support — Cursor and Gemini CLI among them — need dynamic
-registration enabled instead.
 
 The client's OAuth2 credentials stay in its own token store. The server has none:
 it verifies the bearer token by presenting it to Assinafy, forwards it unchanged,
