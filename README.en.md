@@ -123,7 +123,7 @@ return HTTP 401; reconnect when refreshing cannot restore the grant.
 
 All document operations run through MCP with the connection's OAuth2 grant. The
 client manages access tokens, refresh tokens, and renewed consent. The server
-publishes 28 document tools and supplies workflow instructions during MCP initialization.
+publishes 24 document tools and supplies workflow instructions during MCP initialization.
 Refresh the client's tool list after a server update. There is no login tool and
 no need to call the REST API from the conversation.
 
@@ -132,7 +132,7 @@ flowchart TD
     A[Connect and authorize one workspace] --> B{Document source}
     B --> C[Find an existing document]
     B --> D[Upload a PDF or use a template]
-    D --> E[Prepare, estimate cost, request signatures]
+    D --> E[Prepare and request signatures]
     C --> F[Read status, assignment, signers and activities]
     E --> F
     F --> G{Current state}
@@ -200,13 +200,13 @@ as sensitive and share them only with their intended authorized recipients.
 **100% signing progress does not prove the certificated PDF is ready.** Check the
 document's lifecycle state and artifact availability before downloading it.
 
-### 3. Estimate and resend a reminder
+### 3. Resend a reminder
 
 Read the document again, identify the intended pending signer and active signing
 step, and make sure the user's instruction authorizes that reminder. OAuth scopes
 authorize access to an operation; they do not select a recipient for the user.
-
-Call `assinafy_estimate_resend_cost` with:
+A reminder spends notification credits, so get the user's go-ahead before sending
+one. Call `assinafy_resend_notification` with:
 
 ```json
 {
@@ -215,10 +215,6 @@ Call `assinafy_estimate_resend_cost` with:
   "signer_id":"SIGNER_ID"
 }
 ```
-
-Inspect the returned cost, balances, `has_sufficient_resources`, and any
-`blocking_reason`. Estimation does not send a message. When authorized, call
-`assinafy_resend_notification` with the same identifiers.
 
 `is_sent: true` reports the resend result; it does not mean the recipient signed.
 Read delivery history and signing progress afterward. Do not repeatedly resend
@@ -280,11 +276,10 @@ For preparation before sending, use this sequence:
 3. `assinafy_list_signers` / `assinafy_create_signer` supply the signer IDs. Creating
    a contact alone sends no signing request. The standalone create operation can
    return a conflict; look up the existing contact before retrying.
-4. `assinafy_estimate_assignment_cost` prices the intended verification and
-   notification methods without sending invitations. Signer IDs are unnecessary
-   for the estimate; virtual Email signers can be represented by `{}` entries.
-5. `assinafy_create_assignment` starts signing for the existing document using
-   signer IDs. Keep the returned assignment and signer identities for follow-up.
+4. `assinafy_create_assignment` starts signing for the existing document using
+   signer IDs. It spends the workspace's document allowance and, for WhatsApp,
+   notification credits — confirm with the user first. Keep the returned assignment
+   and signer identities for follow-up.
 
 Example `assinafy_create_assignment` arguments:
 
@@ -304,8 +299,8 @@ The assignment tool supports `virtual` and `collect`, optional `copy_receivers`
 Verification methods are `Email`, `Whatsapp`, and `DigitalCertificate`;
 notifications use the documented Email/WhatsApp channels. WhatsApp needs the
 appropriate contact and subscription; certificate signing needs the signer's
-required identity information and enabled account feature. Use cost estimates
-for current charges. Assinafy validates these requirements.
+required identity information and enabled account feature. Assinafy validates
+these requirements and reports the charge on the operation itself.
 
 For ordered signing, every signer must specify a step if any does; steps must be
 contiguous from 1. People in one step sign in parallel. A digital-certificate
@@ -361,42 +356,37 @@ contract template”, resolve the names before creating anything:
 4. If names are missing or ambiguous, ask the user to identify the intended field.
    Do not guess. Repeated placements sharing one `field_id` have one supplied
    value; the API does not offer per-placement values in this request.
-5. Validate the proposed values, resolve one signer per template role, and estimate
-   creation cost before the authorized creation call.
+5. Validate the proposed values and resolve one signer per template role before the
+   authorized creation call.
 
 Template creation and page-layout/role editing are documented only in the internal
 API and are not exposed by this server. Configure the saved template in Assinafy
 before using the public template document workflow.
 
-Estimate first with `assinafy_estimate_template_document_cost`:
+`assinafy_create_document_from_template` fills every role. Each entry gives either
+an existing signer `id` or a `full_name` and `email` that the server creates or
+reuses — one or the other, never both in the same entry, so a template can mix
+directory signers and new contacts in a single call. Entries also take the
+documented `verification_method`, `notification_methods`, and `step`. An entry
+resolved from an email defaults to Email verification and notification; naming a
+notification method instead lets Assinafy infer the matching verification method.
 
-```json
-{"template_id":"TEMPLATE_ID","signers":[{"role_id":"ROLE_ID"}]}
-```
+The call accepts a custom name, message, expiration, `tags` (tag **names**, merged
+with the template defaults), and `editor_fields` containing `{field_id,value}`.
+Creation can send invitations and spends the workspace's document allowance, so
+confirm with the user first. Save the returned document ID, then call
+`assinafy_get_document` for the assignment and subsequent status checks.
 
-Choose the creation tool matching the available input:
-
-- `assinafy_create_document_from_template` takes one `{role_id,full_name,email}`
-  contact per role, creates or reuses the contacts, and uses Email verification
-  and notification.
-- `assinafy_create_template_document` takes existing `{role_id,id}` signer mappings
-  and supports the documented verification, notification, signing-step, and tag
-  options. Its `tags` are tag **names**, merged with the template defaults.
-
-Both accept a custom name, message, expiration, and `editor_fields` containing
-`{field_id,value}`. Creation can send invitations. Save the returned document ID,
-then call `assinafy_get_document` for the assignment and subsequent status checks.
-
-For existing signer IDs, the creation arguments look like this (substitute IDs
-discovered from the selected template and signer directory):
+The creation arguments look like this (substitute IDs discovered from the selected
+template and signer directory):
 
 ```json
 {
   "template_id": "TEMPLATE_ID",
   "name": "Service agreement.pdf",
   "signers": [
-    {"role_id": "EDITOR_ROLE_ID", "id": "PREPARER_SIGNER_ID"},
-    {"role_id": "CUSTOMER_ROLE_ID", "id": "CUSTOMER_SIGNER_ID"}
+    {"role_id": "EDITOR_ROLE_ID", "id": "PREPARER_SIGNER_ID", "step": 1},
+    {"role_id": "CUSTOMER_ROLE_ID", "full_name": "Sample Customer", "email": "customer@example.com", "step": 2}
   ],
   "editor_fields": [
     {"field_id": "CUSTOMER_NAME_FIELD_ID", "value": "Sample Company"},
@@ -405,9 +395,8 @@ discovered from the selected template and signer directory):
 }
 ```
 
-Use `assinafy_create_template_document` for this call. Subsequent status checks,
-reminders, expiration changes, and downloads use the returned document's IDs just
-as they do for uploaded PDFs.
+Subsequent status checks, reminders, expiration changes, and downloads use the
+returned document's IDs just as they do for uploaded PDFs.
 
 ### 7. Inspect page previews
 
@@ -471,7 +460,7 @@ tool inputs for field reference.
 ## Connection status
 
 The server is live at `https://mcp.assinafy.com.br/mcp`. Connecting and listing
-the 28 tools works today with no credential — try it:
+the 24 tools works today with no credential — try it:
 
 ```bash
 curl -sS -X POST https://mcp.assinafy.com.br/mcp \

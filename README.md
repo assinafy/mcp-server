@@ -128,7 +128,7 @@ restaurar a concessão.
 
 Todas as operações de documento passam pelo MCP com a concessão OAuth2 da
 conexão. O cliente cuida de access tokens, refresh tokens e novo consentimento. O
-servidor publica 28 ferramentas de documento e fornece instruções de fluxo na
+servidor publica 24 ferramentas de documento e fornece instruções de fluxo na
 inicialização do MCP. Atualize a lista de ferramentas do cliente depois de uma
 atualização do servidor. Não há ferramenta de login nem necessidade de chamar a
 API REST pela conversa.
@@ -138,7 +138,7 @@ flowchart TD
     A[Conectar e autorizar um workspace] --> B{Origem do documento}
     B --> C[Localizar um documento existente]
     B --> D[Enviar um PDF ou usar um template]
-    D --> E[Preparar, estimar custo, solicitar assinaturas]
+    D --> E[Preparar e solicitar assinaturas]
     C --> F[Ler status, assignment, signatários e atividades]
     E --> F
     F --> G{Estado atual}
@@ -210,14 +210,13 @@ compartilhe apenas com os destinatários autorizados.
 **100% de progresso não prova que o PDF certificado está pronto.** Confira o
 estado do ciclo de vida e a disponibilidade do artefato antes de baixá-lo.
 
-### 3. Estimar e reenviar um lembrete
+### 3. Reenviar um lembrete
 
 Leia o documento de novo, identifique o signatário pendente e a etapa ativa, e
 confirme que a instrução do usuário autoriza aquele lembrete. Escopos OAuth
 autorizam o acesso a uma operação; eles não escolhem um destinatário pelo
-usuário.
-
-Chame `assinafy_estimate_resend_cost` com:
+usuário. Um lembrete consome créditos de notificação, então peça a confirmação
+do usuário antes de enviar. Chame `assinafy_resend_notification` com:
 
 ```json
 {
@@ -226,10 +225,6 @@ Chame `assinafy_estimate_resend_cost` com:
   "signer_id":"SIGNER_ID"
 }
 ```
-
-Verifique o custo retornado, os saldos, `has_sufficient_resources` e qualquer
-`blocking_reason`. Estimar não envia mensagem. Quando autorizado, chame
-`assinafy_resend_notification` com os mesmos identificadores.
 
 `is_sent: true` informa o resultado do reenvio; não significa que a pessoa
 assinou. Leia o histórico de entrega e o progresso depois. Não reenvie
@@ -296,13 +291,10 @@ Para preparar antes de enviar, use esta sequência:
    signatários. Criar um contato sozinho não envia solicitação de assinatura. A
    criação avulsa pode retornar conflito; procure o contato existente antes de
    tentar de novo.
-4. `assinafy_estimate_assignment_cost` precifica os métodos de verificação e
-   notificação pretendidos sem enviar convites. IDs de signatário não são
-   necessários para a estimativa; signatários virtuais por Email podem ser
-   representados por entradas `{}`.
-5. `assinafy_create_assignment` inicia a assinatura do documento existente usando
-   os IDs de signatário. Guarde o assignment e as identidades retornadas para o
-   acompanhamento.
+4. `assinafy_create_assignment` inicia a assinatura do documento existente usando
+   os IDs de signatário. Consome a franquia de documentos da workspace e, no
+   WhatsApp, créditos de notificação — confirme com o usuário antes. Guarde o
+   assignment e as identidades retornadas para o acompanhamento.
 
 Exemplo de argumentos de `assinafy_create_assignment`:
 
@@ -323,8 +315,8 @@ opcionais (IDs de signatário), `message`, `expires_at` e ordem de assinatura po
 `DigitalCertificate`; as notificações usam os canais Email/WhatsApp
 documentados. WhatsApp exige o contato e a assinatura de plano adequados;
 assinatura com certificado exige os dados de identidade do signatário e o
-recurso habilitado na conta. Use as estimativas de custo para os valores atuais.
-A Assinafy valida esses requisitos.
+recurso habilitado na conta. A Assinafy valida esses requisitos e informa a
+cobrança na própria operação.
 
 Na assinatura ordenada, se um signatário informar `step`, todos precisam
 informar; os valores devem ser contíguos a partir de 1. Pessoas na mesma etapa
@@ -387,44 +379,39 @@ contrato de serviço”, resolva os nomes antes de criar qualquer coisa:
    campo pretendido. Não adivinhe. Posicionamentos repetidos com o mesmo
    `field_id` recebem um único valor; a API não oferece valor por posicionamento
    nesta requisição.
-5. Valide os valores propostos, resolva um signatário por papel do template e
-   estime o custo antes da criação autorizada.
+5. Valide os valores propostos e resolva um signatário por papel do template
+   antes da criação autorizada.
 
 Criação de template e edição de layout e papéis são documentadas apenas na API
 interna e não são expostas por este servidor. Configure o template salvo na
 Assinafy antes de usar o fluxo público de documento por template.
 
-Estime primeiro com `assinafy_estimate_template_document_cost`:
+`assinafy_create_document_from_template` preenche todos os papéis. Cada entrada
+traz o `id` de um signatário existente **ou** `full_name` e `email`, que o
+servidor cria ou reutiliza — um ou outro, nunca os dois na mesma entrada, de modo
+que uma única chamada combina signatários do diretório e contatos novos. As
+entradas também aceitam `verification_method`, `notification_methods` e `step`
+conforme documentado. Uma entrada resolvida por email usa verificação e
+notificação por Email; informar só o método de notificação deixa a Assinafy
+inferir a verificação correspondente.
 
-```json
-{"template_id":"TEMPLATE_ID","signers":[{"role_id":"ROLE_ID"}]}
-```
+A chamada aceita nome personalizado, mensagem, expiração, `tags` (**nomes** de
+tag, mesclados com os padrões do template) e `editor_fields` com
+`{field_id,value}`. A criação pode enviar convites e consome a franquia de
+documentos da workspace, então confirme com o usuário antes. Guarde o ID do
+documento retornado e chame `assinafy_get_document` para o assignment e as
+conferências de status seguintes.
 
-Escolha a ferramenta de criação conforme a informação disponível:
-
-- `assinafy_create_document_from_template` recebe um contato
-  `{role_id,full_name,email}` por papel, cria ou reutiliza os contatos e usa
-  verificação e notificação por Email.
-- `assinafy_create_template_document` recebe mapeamentos `{role_id,id}` de
-  signatários existentes e aceita as opções documentadas de verificação,
-  notificação, etapa de assinatura e tags. Suas `tags` são **nomes** de tag,
-  mesclados com os padrões do template.
-
-Ambas aceitam nome personalizado, mensagem, expiração e `editor_fields` com
-`{field_id,value}`. A criação pode enviar convites. Guarde o ID do documento
-retornado e chame `assinafy_get_document` para o assignment e as conferências de
-status seguintes.
-
-Com IDs de signatário existentes, os argumentos de criação ficam assim
-(substitua pelos IDs descobertos no template e no diretório de signatários):
+Os argumentos de criação ficam assim (substitua pelos IDs descobertos no template
+e no diretório de signatários):
 
 ```json
 {
   "template_id": "TEMPLATE_ID",
   "name": "Contrato de serviço.pdf",
   "signers": [
-    {"role_id": "ID_DO_PAPEL_EDITOR", "id": "ID_DO_SIGNATARIO_PREPARADOR"},
-    {"role_id": "ID_DO_PAPEL_CLIENTE", "id": "ID_DO_SIGNATARIO_CLIENTE"}
+    {"role_id": "ID_DO_PAPEL_EDITOR", "id": "ID_DO_SIGNATARIO_PREPARADOR", "step": 1},
+    {"role_id": "ID_DO_PAPEL_CLIENTE", "full_name": "Cliente Exemplo", "email": "cliente@example.com", "step": 2}
   ],
   "editor_fields": [
     {"field_id": "ID_DO_CAMPO_NOME", "value": "Empresa Exemplo"},
@@ -433,9 +420,8 @@ Com IDs de signatário existentes, os argumentos de criação ficam assim
 }
 ```
 
-Use `assinafy_create_template_document` nessa chamada. As conferências de status,
-lembretes, mudanças de expiração e downloads seguintes usam os IDs do documento
-retornado, como em um PDF enviado.
+As conferências de status, lembretes, mudanças de expiração e downloads seguintes
+usam os IDs do documento retornado, como em um PDF enviado.
 
 ### 7. Inspecionar prévias de página
 
@@ -497,7 +483,7 @@ Nenhuma requisição de escrita é repetida automaticamente pelo servidor MCP.
 ## Situação da conexão
 
 O servidor está no ar em `https://mcp.assinafy.com.br/mcp`. Conectar e listar as
-28 ferramentas já funciona sem credencial — experimente:
+24 ferramentas já funciona sem credencial — experimente:
 
 ```bash
 curl -sS -X POST https://mcp.assinafy.com.br/mcp \
