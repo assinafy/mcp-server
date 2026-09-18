@@ -530,9 +530,9 @@ See [error recovery](docs/errors.md) for full response semantics and
 
 ## Connection status
 
-This guide describes the 11-tool catalog for `v3.0.0-rc.1`. On 2026-09-18, the
-public endpoint still advertised version `v2.2.3` with 24 tools. Deploy this
-version before using the new names, then refresh the client's catalog.
+This guide describes the 11-tool catalog introduced in `v3.0.0`. Servers running
+v2.x expose 24 tools. Deploy v3 before using the new names, then refresh the
+client's catalog.
 Connecting and listing tools needs no credential; inspect the deployed catalog with:
 
 ```bash
@@ -551,10 +551,10 @@ verify these authorization-server settings through browser consent:
 | **Client trust** | Permit the client's actual CIMD URL and redirect URI. `invalid_client` can indicate a missing trust entry. A dynamic-registration error can also indicate that CIMD discovery failed; check issuer metadata and client version before changing registration. |
 | **Resource registration** | A client sends the `resource` value this server publishes, `https://mcp.assinafy.com.br/mcp`. Assinafy answers `invalid_target` until that URL is registered as a resource it issues tokens for. |
 
-The audit also found a release requirement for the operator: token verification
-must prove the token was issued for this MCP resource. The current workspace
-probe does not establish that audience binding. Changing client configuration
-does not resolve this server-side limitation.
+Audience validation remains a known limitation in v3.0.0. The current workspace
+probe does not prove that the token was issued for this MCP resource. Follow-up
+integration with the OAuth2 server must establish and enforce that binding;
+changing client configuration does not resolve it.
 
 The client's OAuth2 credentials stay in its own token store. The server has none:
 it verifies the bearer token by presenting it to Assinafy, forwards it unchanged,

@@ -562,10 +562,10 @@ Veja [erros e recuperação](docs/errors.md) e a [referência de entradas](docs/
 
 ## Situação da conexão
 
-Este guia descreve o catálogo de 11 ferramentas de `v3.0.0-rc.1`. Em 2026-09-18, o
-endpoint público ainda anunciava `v2.2.3` com 24 ferramentas. Implante esta versão
-antes de usar os novos nomes e atualize o catálogo do cliente. Conectar e listar
-ferramentas não exige credencial; confira o catálogo implantado com:
+Este guia descreve o catálogo de 11 ferramentas introduzido em `v3.0.0`.
+Servidores na versão v2.x expõem 24 ferramentas. Implante a v3 antes de usar os
+novos nomes e atualize o catálogo do cliente. Conectar e listar ferramentas não
+exige credencial; confira o catálogo implantado com:
 
 ```bash
 curl -sS -X POST https://mcp.assinafy.com.br/mcp \
@@ -583,10 +583,10 @@ configurações do servidor de autorização por consentimento no navegador:
 | Confiança no cliente | Permitir a URL CIMD e o redirect reais do cliente. `invalid_client` pode indicar falta na lista de confiança. Um erro de registro dinâmico também pode indicar falha de descoberta CIMD; confira os metadados e a versão do cliente antes de mudar o registro. |
 | Registro do recurso | O cliente envia `https://mcp.assinafy.com.br/mcp` como `resource`. A Assinafy pode responder `invalid_target` enquanto essa URL não estiver registrada como recurso para o qual emite tokens. |
 
-A auditoria também identificou um requisito de release para o operador: verificar
-que o token foi emitido para este recurso MCP. A consulta atual de workspace não
-comprova essa audiência. Alterar a configuração do cliente não resolve essa
-limitação do servidor.
+A validação de audiência continua sendo uma limitação conhecida na v3.0.0.
+A consulta atual de workspace não comprova que o token foi emitido para este
+recurso MCP. Uma integração posterior com o servidor OAuth2 deve comprovar e
+validar esse vínculo; alterar a configuração do cliente não resolve a limitação.
 
 As credenciais OAuth2 ficam no armazenamento do cliente. O servidor não tem
 credenciais próprias: verifica o bearer na Assinafy, repassa-o sem alteração e
