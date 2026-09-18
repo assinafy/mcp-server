@@ -300,7 +300,11 @@ Verification methods are `Email`, `Whatsapp`, and `DigitalCertificate`;
 notifications use the documented Email/WhatsApp channels. WhatsApp needs the
 appropriate contact and subscription; certificate signing needs the signer's
 required identity information and enabled account feature. Assinafy validates
-these requirements and reports the charge on the operation itself.
+these requirements. No response carries a cost or a balance: creating a document
+and sending a WhatsApp notification draw on the workspace's document allowance and
+notification credits at the published rates, and the remaining allowance is visible
+in Assinafy rather than through this server. Get the user's go-ahead before a
+billable call, and never repeat one because progress looks unchanged.
 
 For ordered signing, every signer must specify a step if any does; steps must be
 contiguous from 1. People in one step sign in parallel. A digital-certificate

@@ -315,8 +315,12 @@ opcionais (IDs de signatário), `message`, `expires_at` e ordem de assinatura po
 `DigitalCertificate`; as notificações usam os canais Email/WhatsApp
 documentados. WhatsApp exige o contato e a assinatura de plano adequados;
 assinatura com certificado exige os dados de identidade do signatário e o
-recurso habilitado na conta. A Assinafy valida esses requisitos e informa a
-cobrança na própria operação.
+recurso habilitado na conta. A Assinafy valida esses requisitos. Nenhuma resposta
+traz custo ou saldo: criar um documento e enviar uma notificação por WhatsApp
+consomem a franquia de documentos e os créditos de notificação da workspace pelas
+taxas publicadas, e o saldo restante se consulta no Assinafy, não por este
+servidor. Peça a confirmação do usuário antes de uma chamada cobrada e não repita
+nenhuma porque o progresso parece parado.
 
 Na assinatura ordenada, se um signatário informar `step`, todos precisam
 informar; os valores devem ser contíguos a partir de 1. Pessoas na mesma etapa
