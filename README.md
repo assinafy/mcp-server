@@ -152,8 +152,8 @@ flowchart TD
 ### 1. Localizar o documento e conferir seu estado
 
 Use `assinafy_list_documents` com `search`, `status`, `page` e `per_page`. Ele
-também aceita `sort`, `method` (`virtual` ou `collect`) e IDs de tag separados por
-vírgula em `tags`. Todas as tags informadas precisam corresponder. As páginas
+também aceita `sort`, que recebe `name` ou `updated_at`, opcionalmente prefixado
+por `-` para inverter a ordem. As páginas
 começam em 1 e trazem no máximo 100 registros; siga o `meta` de paginação
 retornado em vez de supor que a primeira página contém todos os documentos.
 

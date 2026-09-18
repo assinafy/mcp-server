@@ -61,8 +61,7 @@ CIMD when the client configuration offers a registration choice. ChatGPT support
 public-client authentication with `none`; customers need no client secret. Its
 hosted metadata identity and redirect differ from Codex's, so the authorization
 server must permit both independently. See
-[ChatGPT authentication](https://developers.openai.com/plugins/build/auth) and the
-client registration requirements.
+[ChatGPT authentication](https://developers.openai.com/plugins/build/auth).
 
 ## VS Code / GitHub Copilot Chat
 
@@ -146,8 +145,8 @@ flowchart TD
 ### 1. Find the document and check its current state
 
 Use `assinafy_list_documents` with `search`, `status`, `page`, and `per_page`.
-It also supports `sort`, `method` (`virtual` or `collect`), and comma-separated
-tag IDs in `tags`. All supplied tag IDs must match.
+It also supports `sort`, which accepts `name` or `updated_at`, optionally prefixed
+by `-` to reverse the order.
 Pages start at 1 and contain at most 100 records; follow returned pagination `meta`
 instead of assuming the first page contains every document.
 
@@ -458,8 +457,6 @@ No mutating API request is automatically retried by the MCP server.
 | HTTP 429 | Assinafy is rate-limiting authorization checks; honour `Retry-After`. |
 | HTTP 503 during authentication | Assinafy was unreachable while the token was checked; retry. API-key fallback is not part of the client flow. |
 
-See error recovery for full response semantics and
-tool inputs for field reference.
 
 ## Connection status
 
