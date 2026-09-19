@@ -32,13 +32,19 @@ URL CIMD hospedada e abre o consentimento da Assinafy. Escolha o workspace e
 aprove as permissões. Nada além disso pertence à configuração do usuário.
 Veja a [documentação MCP do Codex](https://developers.openai.com/codex/mcp).
 
+O login do Codex requer o servidor `v3.0.1` ou posterior. Se aparecer `Protected
+resource metadata missing required resource field`, peça ao operador para
+atualizar o servidor e execute novamente `codex mcp login assinafy`. Mantenha a
+mesma URL MCP.
+
 ## Claude Code
 
 ```bash
 claude mcp add --transport http assinafy https://mcp.assinafy.com.br/mcp
+claude mcp login assinafy
 ```
 
-Abra `/mcp` no Claude Code e autentique na Assinafy. O Claude Code descobre o
+Você também pode abrir `/mcp` no Claude Code para autenticar na Assinafy. O Claude Code descobre o
 suporte a CIMD pelo issuer; não informe client ID nem client secret. Veja a
 [documentação MCP do Claude Code](https://code.claude.com/docs/en/mcp).
 

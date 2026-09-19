@@ -8,6 +8,12 @@ connecting, listing tools and the public verification tool answer without one.
 
 ## Authentication and transport
 
+If `codex mcp login assinafy` reports `Protected resource metadata missing required
+resource field`, check the deployed server version. Versions before `v3.0.1`
+returned a tool manifest at `GET /mcp` without OAuth metadata, which Codex treated
+as an incomplete discovery document. Deploy `v3.0.1` or later and retry the same
+login command; no change to the client's MCP URL or credentials is required.
+
 | HTTP status | Meaning and recovery |
 |---|---|
 | 400 | Malformed request, credential override attempt, duplicate Authorization headers, a token in the query string, a message repeating a JSON key, an unknown tool name, or a batch over 20 messages |
