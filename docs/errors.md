@@ -8,31 +8,22 @@ connecting, listing tools and the public verification tool answer without one.
 
 ## Authentication and transport
 
-If `codex mcp login assinafy` reports `Protected resource metadata missing required
-resource field`, check the deployed server version. Versions before `v3.0.1`
-returned a tool manifest at `GET /mcp` without OAuth metadata, which Codex treated
-as an incomplete discovery document. Deploy `v3.0.1` or later and retry the same
-login command; no change to the client's MCP URL or credentials is required.
-
-If login returns `invalid_target`, the authorization server has rejected the
-MCP resource `https://mcp.assinafy.com.br/mcp`. This was reproduced in production
-with both Codex and Claude Code on 2026-09-19, after successful discovery. Ask the
-Assinafy operator to enable that exact resource in the provider's accepted
-audiences, then retry login. Keep the MCP URL unchanged. Consent and token
-exchange cannot complete until the provider accepts the resource; reinstalling
-the client or supplying API credentials does not resolve this rejection.
+If login reports missing resource metadata, `invalid_target` or `invalid_client`,
+confirm the exact server URL `https://mcp.assinafy.com.br/mcp` and update your
+client. If it persists, contact Assinafy support with the client name, version and
+error message. Keep credentials and authorization codes out of support reports.
 
 | HTTP status | Meaning and recovery |
 |---|---|
 | 400 | Malformed request, credential override attempt, duplicate Authorization headers, a token in the query string, a message repeating a JSON key, an unknown tool name, or a batch over 20 messages |
 | 401 | A tool needing a workspace was called with no token, an unusable one, or a credential that is not an Assinafy OAuth token; also an unauthenticated request over 64 KiB. Follow the `resource_metadata` challenge and reconnect |
-| 403 with `insufficient_scope` | Assinafy reported a missing permission. Consent for the scopes in `WWW-Authenticate` and retry |
+| 403 with `insufficient_scope` | The validated grant lacks an action permission, or exchange refused its scopes. Consent for the scopes in `WWW-Authenticate` and retry; the workflow has not started |
 | Other 403 | Forbidden Origin, unexpected public Host, or an area no OAuth token may reach; correct the client, proxy, or the request |
 | 405 on an event-stream GET | Expected: this stateless server does not provide a standalone SSE stream; use POST Streamable HTTP |
 | 415 | A POST to `/mcp` whose `Content-Type` is not `application/json` |
 | 413 | A verified request exceeds the 40 MiB limit. An anonymous request is capped at 64 KiB; a bearer token is verified after at most 64 KiB plus one byte, before buffering a larger body |
 | 429 | Assinafy is rate-limiting authorization checks; honour the `Retry-After` header |
-| 503 | Assinafy is unreachable or answered unusably while the token was being checked; retry later |
+| 503 | The authentication service is unavailable; retry later and contact Assinafy support if it persists |
 
 The HTTP authorization responses above carry no body beyond the status text, so
 no Assinafy description or credential leaks through them. Upstream messages do
@@ -41,20 +32,14 @@ refresh a client's tokens; refresh is the client's job. A
 credential or workspace override in tool arguments or `_meta` returns a tool
 error before the document operation runs.
 
-**A missing permission can surface twice, and only one of them is an HTTP
-status.** Access tokens are opaque, so this server cannot read what a grant
-allows and cannot refuse a write before Assinafy does. When the workspace lookup
-is refused the client gets `403`; when a tool call is refused the MCP
-specification renders it inside a `200` JSON-RPC result with `isError: true`,
-carrying Assinafy's message and the `WWW-Authenticate` challenge naming the
-missing scope. A composite tool can therefore complete part of its work before
-being refused — its error names the document it kept, so the work can be
-resumed rather than repeated.
+The MCP checks permissions returned by the issuer before executing any action.
+A missing action scope returns HTTP `403 insufficient_scope` before mutations.
+Assinafy also enforces authorization on every business-API call; revocation,
+membership changes or other upstream failures during a workflow can still
+produce a `200` JSON-RPC result with `isError: true`. Inspect a retained document
+ID before retrying a partially completed workflow.
 
-The server refuses to start if issuer metadata lacks the required capabilities,
-or if any registered tool declares no scopes without being listed as public.
-`/healthz` and `/readyz` report only that this process is serving; readiness is
-deliberately independent of Assinafy. See [authentication](../README.en.md#workspaces-and-permissions).
+See [workspaces and permissions](../README.en.md#workspaces-and-permissions) for scope selection and reconnection.
 
 ## Error types
 

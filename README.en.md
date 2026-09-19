@@ -2,26 +2,16 @@
 
 *[Leia em português](README.md) · English*
 
-Connect once with **Assinafy OAuth2 and CIMD**, then manage the document lifecycle
-through MCP tools: prepare and send, check status and delivery, resend reminders,
-update expiration, download artifacts, and recover incomplete work.
+Connect Assinafy to your assistant to prepare and send documents, track signatures,
+follow up with recipients, and download signed copies.
 
-Use the deployed HTTPS Streamable HTTP URL ending in `/mcp`; replace the example
-host with the endpoint supplied by the operator. Claude and Codex discover their
-CIMD identities automatically. Customers do not create an OAuth application or
-enter a client ID, client secret, API key, or workspace header. Sign in to Assinafy,
-choose one workspace, and consent to the requested permissions. The server enforces
-that workspace on every operation.
+Use `https://mcp.assinafy.com.br/mcp` as the server URL. Sign in to Assinafy,
+choose a workspace, and approve the requested permissions. You do not need to
+create an OAuth application or enter a client ID, client secret, API key, or
+workspace header.
 
-Connecting and listing the tools need no sign-in, so a client can show what the
-server offers first; consent is requested when a tool needs your workspace. The
-clients below identify themselves with a Client ID Metadata Document, which is
-how Assinafy recognises them; see [connection status](#connection-status).
-
-**Production check, 2026-09-19:** Codex and Claude Code passed discovery on
-`v3.0.1`, but login stopped before consent with `invalid_target`. The Assinafy
-operator must enable the MCP resource before workspace access can work. Keep
-the URL below; see [login error recovery](docs/errors.md#authentication-and-transport).
+You can connect and view the tool catalog before signing in. Authorization is
+requested when a tool needs access to your workspace.
 
 ## Codex
 
@@ -30,14 +20,8 @@ codex mcp add assinafy --url https://mcp.assinafy.com.br/mcp
 codex mcp login assinafy
 ```
 
-Codex discovers the protected resource and authorization server, uses its own hosted
-CIMD URL automatically, and opens Assinafy consent. Choose the workspace and approve
-permissions. Nothing else belongs in the user's configuration.
+Complete the browser sign-in, choose your workspace, and approve the permissions.
 See [Codex MCP documentation](https://developers.openai.com/codex/mcp).
-
-Codex login requires server `v3.0.1` or later. If it reports `Protected resource
-metadata missing required resource field`, ask the operator to update the server,
-then retry `codex mcp login assinafy`. Keep the same MCP URL.
 
 ## Claude Code
 
@@ -46,8 +30,8 @@ claude mcp add --transport http assinafy https://mcp.assinafy.com.br/mcp
 claude mcp login assinafy
 ```
 
-You can also open `/mcp` in Claude Code to authenticate Assinafy. Claude Code discovers CIMD
-support from the issuer; do not supply a client ID or client secret. See
+You can also open `/mcp` in Claude Code to authenticate Assinafy. Complete the
+browser sign-in and select your workspace. See
 [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp).
 
 ## Claude remote connectors
@@ -59,20 +43,14 @@ of custom connectors depends on the client's plan and organization settings.
 A local command registration is for Claude Code; a hosted connector needs the
 publicly reachable HTTPS URL.
 
-Claude selects CIMD when issuer metadata advertises both
-`client_id_metadata_document_supported: true` and `none` in
-`token_endpoint_auth_methods_supported`. The Assinafy issuer advertises both;
-the client selects CIMD. See [Claude connector authentication](https://claude.com/docs/connectors/building/authentication).
+See [Claude connector authentication](https://claude.com/docs/connectors/building/authentication).
 
 ## ChatGPT
 
-Configure a remote MCP connection with OAuth and the deployed Assinafy URL. Select
-CIMD when the client configuration offers a registration choice. ChatGPT supports
-public-client authentication with `none`; customers need no client secret. Its
-hosted metadata identity and redirect differ from Codex's, so the authorization
-server must permit both independently. See
-[ChatGPT authentication](https://developers.openai.com/plugins/build/auth) and the
-[client registration requirements](#connection-status).
+Configure a remote MCP connection with OAuth and the Assinafy URL. Select CIMD
+if a registration choice is offered, leave optional client credentials unset,
+and complete the Assinafy sign-in and workspace selection. See
+[ChatGPT authentication](https://developers.openai.com/plugins/build/auth).
 
 ## VS Code / GitHub Copilot Chat
 
@@ -103,33 +81,35 @@ any other credential in prompts, tool arguments, or `_meta`; requests carrying t
 are rejected.
 
 You configure the MCP URL. Discovery advertises
-`account:read documents:read documents:write templates:read` for the whole
-catalog. A tool's challenge may request a smaller set; the consent shown depends
-on the client. Granting the full set covers all tools. A narrower grant may need
-another consent before sending. `templates:write` is never requested: no tool modifies a template.
+`account:read documents:read documents:write templates:read templates:write` for the whole
+catalog. Login requests this full set by default so one consent covers all tools.
+You can explicitly choose fewer scopes in your client or consent screen; actions
+covered by those permissions still work. A narrower grant may need additional
+consent before sending. Assinafy requires `templates:write` to generate a
+document from a saved template, and `documents:write` to validate field values.
 Request `offline_access` when the client supports refresh tokens for background
 access.
 
-**Assinafy enforces permissions, and this server reports them.** Access tokens
-are opaque, so the server cannot read what a grant allows and cannot refuse a
-write in advance. A refused call returns Assinafy's own message naming the
-missing scope. This matters for multi-step tools: under a partial grant,
-`assinafy_request_signatures` (`action: "from_pdf"`) can upload the PDF and then be refused at
-the next step. Its error carries the retained `document_id`, so continue from
-`assinafy_request_signatures` (`action: "from_document"`) rather than uploading again. Approving the full set
-at connect time is what keeps this rare.
+A missing permission returns HTTP `403 insufficient_scope` with the scopes to
+approve before the workflow starts. Reauthorize with the requested permissions
+and try again. Other failures can still interrupt a workflow after it starts;
+inspect any retained `document_id` before retrying.
 
 For Codex, explicitly authorize the complete document and template flow with:
 
 ```bash
-codex mcp login assinafy --scopes account:read,documents:read,documents:write,templates:read,offline_access
+codex mcp login assinafy --scopes account:read,documents:read,documents:write,templates:read,templates:write,offline_access
 ```
 
-The client stores and refreshes its tokens. The MCP does not provide a login tool,
-accept refresh tokens, or store tenant credentials. Expired or revoked grants
-return HTTP 401 during authentication, or a tool error if Assinafy rejects the
-operation while a previous authorization decision is cached. Reconnect when
-refreshing cannot restore the grant.
+For an intentionally read-only document connection, choose:
+
+```bash
+codex mcp login assinafy --scopes account:read,documents:read,offline_access
+```
+
+Your client stores and refreshes its tokens. If a grant expires or is revoked,
+let the client refresh it or reconnect through Assinafy. Never paste tokens into
+the conversation or tool arguments.
 
 ## Conversational behavior
 
@@ -153,12 +133,9 @@ chat replies. Reads never send invitations. Preparation never sends invitations.
 
 ## Document flow
 
-All document operations run through MCP with the connection's OAuth2 grant. The
-client manages access tokens, refresh tokens, and renewed consent. The server
-publishes 11 task-oriented tools covering 24 operations and supplies workflow instructions during MCP initialization.
-This replaces the previous per-operation names. Refresh the client's tool list
-after a server update and migrate explicit tool calls using the [tool reference](docs/tools.md). There is no login tool and
-no need to call the REST API from the conversation.
+The server provides 11 tools covering 24 document operations. Your assistant
+chooses tools and actions from the catalog; you describe what you want to do.
+See the [tool reference](docs/tools.md) for inputs and examples.
 
 ```mermaid
 flowchart TD
@@ -533,17 +510,15 @@ No mutating API request is automatically retried by the MCP server.
 | Invalid contact, expired assignment, or unavailable artifact | Correct the request or wait for the required lifecycle state. |
 | Rate limit or uncertain network response | Respect retry timing; inspect state and delivery history before repeating a write. |
 | HTTP 429 | Assinafy is rate-limiting authorization checks; honour `Retry-After`. |
-| HTTP 503 during authentication | Assinafy was unreachable while the token was checked; retry. API-key fallback is not part of the client flow. |
+| HTTP 503 during authentication | The service is temporarily unavailable. Retry later; contact Assinafy support if it persists. |
 
 See [error recovery](docs/errors.md) for full response semantics and
 [tool inputs](docs/tools.md) for field reference.
 
-## Connection status
+## Check the connection
 
-This guide describes the 11-tool catalog introduced in `v3.0.0`. Servers running
-v2.x expose 24 tools. Deploy v3 before using the new names, then refresh the
-client's catalog.
-Connecting and listing tools needs no credential; inspect the deployed catalog with:
+Refresh the tool list in your client after reconnecting or updating it. You can
+also inspect the available catalog without signing in:
 
 ```bash
 curl -sS -X POST https://mcp.assinafy.com.br/mcp \
@@ -552,21 +527,7 @@ curl -sS -X POST https://mcp.assinafy.com.br/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
-Public discovery advertises CIMD, public-client token authentication and PKCE
-S256. Production tests on 2026-09-19 with Codex 0.155.1 and Claude Code 2.1.277
-passed discovery, then received `invalid_target` before consent. Neither flow
-exchanged tokens. These authorization-server requirements still apply:
-
-| | |
-|---|---|
-| **Client trust** | Permit the client's actual CIMD URL and redirect URI. `invalid_client` can indicate a missing trust entry. A dynamic-registration error can also indicate that CIMD discovery failed; check issuer metadata and client version before changing registration. |
-| **Resource registration** | A client sends the `resource` value this server publishes, `https://mcp.assinafy.com.br/mcp`. Assinafy answers `invalid_target` until that URL is registered as a resource it issues tokens for. |
-
-Audience validation remains a known limitation through v3.0.1. The current workspace
-probe does not prove that the token was issued for this MCP resource. Follow-up
-integration with the OAuth2 server must establish and enforce that binding;
-changing client configuration does not resolve it.
-
-The client's OAuth2 credentials stay in its own token store. The server has none:
-it verifies the bearer token by presenting it to Assinafy, forwards it unchanged,
-and stores nothing.
+If login reports `invalid_target`, `invalid_client`, or missing resource metadata,
+confirm that the server URL is exactly `https://mcp.assinafy.com.br/mcp` and that
+your client is up to date. If the error persists, contact Assinafy support with
+the client name, version, and error message. Do not include tokens or credentials.

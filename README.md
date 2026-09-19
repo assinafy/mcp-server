@@ -2,29 +2,16 @@
 
 *Português · [Read in English](README.en.md)*
 
-Conecte uma vez com **OAuth2 da Assinafy e CIMD** e conduza o ciclo de vida do
-documento pelas ferramentas MCP: preparar e enviar, acompanhar status e entrega,
-reenviar lembretes, atualizar a expiração, baixar artefatos e retomar trabalho
-incompleto.
+Conecte a Assinafy ao seu assistente para preparar e enviar documentos,
+acompanhar assinaturas, enviar lembretes e baixar cópias assinadas.
 
-Use a URL HTTPS de Streamable HTTP terminada em `/mcp`; substitua o host de
-exemplo pelo endpoint informado pelo operador. Claude e Codex descobrem suas
-identidades CIMD automaticamente. O cliente não cria aplicativo OAuth nem informa
-client ID, client secret, chave de API ou cabeçalho de workspace. Entre na
-Assinafy, escolha um workspace e aprove as permissões solicitadas. O servidor
-impõe esse workspace em todas as operações.
+Use `https://mcp.assinafy.com.br/mcp` como URL do servidor. Entre na Assinafy,
+escolha um workspace e aprove as permissões solicitadas. Você não precisa criar
+um aplicativo OAuth nem informar client ID, client secret, chave de API ou
+cabeçalho de workspace.
 
-Conectar e listar as ferramentas não exigem login, então o cliente já mostra o
-que o servidor oferece; o consentimento é pedido quando uma ferramenta precisa do
-seu workspace. Os clientes abaixo se identificam por um Client ID Metadata
-Document, que é como a Assinafy os reconhece; veja
-[situação da conexão](#situação-da-conexão).
-
-**Verificação em produção, 19/09/2026:** Codex e Claude Code concluíram a
-descoberta na `v3.0.1`, mas o login parou antes do consentimento com
-`invalid_target`. O operador da Assinafy precisa habilitar o recurso MCP para
-permitir acesso ao workspace. Mantenha a URL abaixo; veja a
-[recuperação de erros de login](docs/errors.md#authentication-and-transport).
+É possível conectar e consultar o catálogo antes de entrar. A autorização é
+solicitada quando uma ferramenta precisa acessar seu workspace.
 
 ## Codex
 
@@ -33,15 +20,8 @@ codex mcp add assinafy --url https://mcp.assinafy.com.br/mcp
 codex mcp login assinafy
 ```
 
-O Codex descobre o recurso protegido e o servidor de autorização, usa sua própria
-URL CIMD hospedada e abre o consentimento da Assinafy. Escolha o workspace e
-aprove as permissões. Nada além disso pertence à configuração do usuário.
+Conclua a entrada no navegador, escolha o workspace e aprove as permissões.
 Veja a [documentação MCP do Codex](https://developers.openai.com/codex/mcp).
-
-O login do Codex requer o servidor `v3.0.1` ou posterior. Se aparecer `Protected
-resource metadata missing required resource field`, peça ao operador para
-atualizar o servidor e execute novamente `codex mcp login assinafy`. Mantenha a
-mesma URL MCP.
 
 ## Claude Code
 
@@ -50,8 +30,8 @@ claude mcp add --transport http assinafy https://mcp.assinafy.com.br/mcp
 claude mcp login assinafy
 ```
 
-Você também pode abrir `/mcp` no Claude Code para autenticar na Assinafy. O Claude Code descobre o
-suporte a CIMD pelo issuer; não informe client ID nem client secret. Veja a
+Você também pode abrir `/mcp` no Claude Code para autenticar na Assinafy.
+Conclua a entrada no navegador e escolha seu workspace. Veja a
 [documentação MCP do Claude Code](https://code.claude.com/docs/en/mcp).
 
 ## Conectores remotos do Claude
@@ -63,21 +43,14 @@ quando houver CIMD. A disponibilidade de conectores personalizados depende do
 plano e das configurações da organização. O registro por linha de comando é do
 Claude Code; um conector hospedado precisa da URL HTTPS pública.
 
-O Claude escolhe CIMD quando os metadados do issuer anunciam ao mesmo tempo
-`client_id_metadata_document_supported: true` e `none` em
-`token_endpoint_auth_methods_supported`. O issuer da Assinafy anuncia os dois;
-o cliente escolhe CIMD. Veja a
-[autenticação de conectores do Claude](https://claude.com/docs/connectors/building/authentication).
+Veja a [autenticação de conectores do Claude](https://claude.com/docs/connectors/building/authentication).
 
 ## ChatGPT
 
-Configure uma conexão MCP remota com OAuth e a URL da Assinafy. Escolha CIMD
-quando a configuração oferecer a opção de registro. O ChatGPT suporta
-autenticação de cliente público com `none`; o cliente não precisa de client
-secret. Sua identidade de metadados e seu redirect são diferentes dos do Codex,
-então o servidor de autorização precisa permitir os dois de forma independente.
-Veja a [autenticação do ChatGPT](https://developers.openai.com/plugins/build/auth)
-e os [requisitos de registro de cliente](#situação-da-conexão).
+Configure uma conexão MCP remota com OAuth e a URL da Assinafy. Escolha CIMD se
+houver uma opção de registro, deixe as credenciais opcionais em branco e conclua
+a entrada na Assinafy e a seleção de workspace. Veja a
+[autenticação do ChatGPT](https://developers.openai.com/plugins/build/auth).
 
 ## VS Code / GitHub Copilot Chat
 
@@ -108,34 +81,33 @@ chaves de API, tokens OAuth ou qualquer outra credencial em prompts, argumentos
 de ferramenta ou `_meta`; requisições que os carregam são recusadas.
 
 Você configura a URL do MCP. Os metadados anunciam
-`account:read documents:read documents:write templates:read` para todo o catálogo.
-O desafio de uma ferramenta pode pedir um conjunto menor; o consentimento exibido
-depende do cliente. O conjunto completo cobre todas as ferramentas. Uma concessão
-menor pode exigir novo consentimento antes de enviar. `templates:write` nunca é
-pedido: nenhuma ferramenta altera um template. Peça `offline_access` quando o cliente usar refresh tokens
-para acesso em segundo plano.
+`account:read documents:read documents:write templates:read templates:write`
+para todo o catálogo. O login pede o conjunto completo por padrão, cobrindo todas
+as ferramentas com um consentimento. Você pode escolher menos escopos no cliente
+ou na tela de consentimento e usar as ações permitidas por eles. A API exige
+`templates:write` para gerar um documento de template salvo, e `documents:write` para validar valores de campos. Peça
+`offline_access` quando o cliente usar refresh tokens para acesso em segundo plano.
 
-**A Assinafy impõe as permissões, e este servidor as reporta.** Os access tokens
-são opacos, então o servidor não consegue ler o que a concessão permite e não
-recusa uma escrita antecipadamente. Uma chamada recusada devolve a mensagem da
-própria Assinafy nomeando o escopo que falta. Isso importa nas ferramentas de
-várias etapas: com uma concessão parcial, `assinafy_request_signatures` (`action: "from_pdf"`)
-pode enviar o PDF e ser recusada na etapa seguinte. O erro carrega o
-`document_id` preservado, então continue por `assinafy_request_signatures` (`action: "from_document"`) em vez
-de enviar o arquivo de novo. Aprovar o conjunto completo na conexão é o que torna
-isso raro.
+Uma permissão ausente retorna HTTP `403 insufficient_scope`, com os escopos a
+aprovar, antes de iniciar o fluxo. Autorize as permissões solicitadas e tente
+novamente. Outras falhas podem interromper uma operação depois de iniciada;
+inspecione qualquer `document_id` preservado antes de repetir a operação.
 
 Para o Codex, autorize explicitamente o fluxo completo de documentos e templates:
 
 ```bash
-codex mcp login assinafy --scopes account:read,documents:read,documents:write,templates:read,offline_access
+codex mcp login assinafy --scopes account:read,documents:read,documents:write,templates:read,templates:write,offline_access
 ```
 
-O cliente guarda e renova os próprios tokens. O MCP não oferece ferramenta de
-login, não aceita refresh tokens e não guarda credenciais do cliente. Concessões
-expiradas ou revogadas retornam HTTP 401 na autenticação, ou erro de ferramenta
-se a Assinafy recusar a operação enquanto uma decisão anterior está em cache.
-Reconecte quando a renovação não restaurar a concessão.
+Para uma conexão de documentos intencionalmente somente leitura, escolha:
+
+```bash
+codex mcp login assinafy --scopes account:read,documents:read,offline_access
+```
+
+Seu cliente guarda e renova os tokens. Se uma concessão expirar ou for revogada,
+deixe o cliente renová-la ou reconecte pela Assinafy. Nunca cole tokens na
+conversa ou nos argumentos das ferramentas.
 
 ## Comportamento na conversa
 
@@ -158,13 +130,9 @@ não enviam convites. Consulte [todas as ferramentas e entradas](docs/tools.md).
 
 ## Fluxo do documento
 
-Todas as operações de documento passam pelo MCP com a concessão OAuth2 da
-conexão. O cliente cuida de access tokens, refresh tokens e novo consentimento. O
-servidor publica 11 ferramentas por tarefa, cobrindo 24 operações, e fornece
-instruções de fluxo na inicialização do MCP. Os nomes anteriores foram substituídos.
-Atualize a lista de ferramentas após a implantação e adapte chamadas explícitas
-pela [referência e tabela de migração](docs/tools.md#migrating-from-per-operation-tools). Não há ferramenta de login nem necessidade de chamar a
-API REST pela conversa.
+O servidor oferece 11 ferramentas para 24 operações de documentos. Seu assistente
+escolhe as ferramentas e ações do catálogo; você descreve o que quer fazer.
+Consulte a [referência de ferramentas](docs/tools.md) para entradas e exemplos.
 
 ```mermaid
 flowchart TD
@@ -568,16 +536,14 @@ Nenhuma requisição de escrita é repetida automaticamente pelo servidor MCP.
 | Contato inválido, assignment expirado ou artefato indisponível | Corrija a requisição ou aguarde o estado necessário do ciclo de vida. |
 | Limite de taxa ou resposta de rede incerta | Respeite o tempo de nova tentativa; inspecione o estado e o histórico de entrega antes de repetir uma escrita. |
 | HTTP 429 | A Assinafy está limitando as verificações de autorização; respeite o `Retry-After`. |
-| HTTP 503 na autenticação | A Assinafy estava inacessível durante a verificação do token; tente de novo. Não existe alternativa por chave de API no fluxo do cliente. |
+| HTTP 503 na autenticação | Serviço temporariamente indisponível. Tente mais tarde; contate o suporte da Assinafy se persistir. |
 
 Veja [erros e recuperação](docs/errors.md) e a [referência de entradas](docs/tools.md).
 
-## Situação da conexão
+## Verificar a conexão
 
-Este guia descreve o catálogo de 11 ferramentas introduzido em `v3.0.0`.
-Servidores na versão v2.x expõem 24 ferramentas. Implante a v3 antes de usar os
-novos nomes e atualize o catálogo do cliente. Conectar e listar ferramentas não
-exige credencial; confira o catálogo implantado com:
+Atualize a lista de ferramentas no cliente após reconectar ou atualizar o cliente.
+Também é possível consultar o catálogo disponível sem entrar:
 
 ```bash
 curl -sS -X POST https://mcp.assinafy.com.br/mcp \
@@ -586,22 +552,7 @@ curl -sS -X POST https://mcp.assinafy.com.br/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
-A descoberta pública anuncia CIMD, autenticação de cliente público e PKCE S256.
-Nos testes em produção de 19/09/2026, Codex 0.155.1 e Claude Code 2.1.277
-concluíram a descoberta, mas receberam `invalid_target` antes do consentimento.
-Nenhum fluxo trocou tokens. Estes requisitos do servidor de autorização
-continuam necessários:
-
-| Configuração | Verificação |
-|---|---|
-| Confiança no cliente | Permitir a URL CIMD e o redirect reais do cliente. `invalid_client` pode indicar falta na lista de confiança. Um erro de registro dinâmico também pode indicar falha de descoberta CIMD; confira os metadados e a versão do cliente antes de mudar o registro. |
-| Registro do recurso | O cliente envia `https://mcp.assinafy.com.br/mcp` como `resource`. A Assinafy pode responder `invalid_target` enquanto essa URL não estiver registrada como recurso para o qual emite tokens. |
-
-A validação de audiência continua sendo uma limitação conhecida até a v3.0.1.
-A consulta atual de workspace não comprova que o token foi emitido para este
-recurso MCP. Uma integração posterior com o servidor OAuth2 deve comprovar e
-validar esse vínculo; alterar a configuração do cliente não resolve a limitação.
-
-As credenciais OAuth2 ficam no armazenamento do cliente. O servidor não tem
-credenciais próprias: verifica o bearer na Assinafy, repassa-o sem alteração e
-não guarda tokens em disco.
+Se o login informar `invalid_target`, `invalid_client` ou falta de metadados do
+recurso, confira se a URL é exatamente `https://mcp.assinafy.com.br/mcp` e se o
+cliente está atualizado. Se persistir, contate o suporte da Assinafy com o nome
+e a versão do cliente e a mensagem de erro. Não inclua tokens ou credenciais.
