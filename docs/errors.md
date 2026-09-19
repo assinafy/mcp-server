@@ -14,6 +14,14 @@ returned a tool manifest at `GET /mcp` without OAuth metadata, which Codex treat
 as an incomplete discovery document. Deploy `v3.0.1` or later and retry the same
 login command; no change to the client's MCP URL or credentials is required.
 
+If login returns `invalid_target`, the authorization server has rejected the
+MCP resource `https://mcp.assinafy.com.br/mcp`. This was reproduced in production
+with both Codex and Claude Code on 2026-09-19, after successful discovery. Ask the
+Assinafy operator to enable that exact resource in the provider's accepted
+audiences, then retry login. Keep the MCP URL unchanged. Consent and token
+exchange cannot complete until the provider accepts the resource; reinstalling
+the client or supplying API credentials does not resolve this rejection.
+
 | HTTP status | Meaning and recovery |
 |---|---|
 | 400 | Malformed request, credential override attempt, duplicate Authorization headers, a token in the query string, a message repeating a JSON key, an unknown tool name, or a batch over 20 messages |

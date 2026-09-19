@@ -18,6 +18,11 @@ server offers first; consent is requested when a tool needs your workspace. The
 clients below identify themselves with a Client ID Metadata Document, which is
 how Assinafy recognises them; see [connection status](#connection-status).
 
+**Production check, 2026-09-19:** Codex and Claude Code passed discovery on
+`v3.0.1`, but login stopped before consent with `invalid_target`. The Assinafy
+operator must enable the MCP resource before workspace access can work. Keep
+the URL below; see [login error recovery](docs/errors.md#authentication-and-transport).
+
 ## Codex
 
 ```bash
@@ -547,16 +552,17 @@ curl -sS -X POST https://mcp.assinafy.com.br/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
-Public discovery currently advertises CIMD, public-client token authentication
-and PKCE S256. That does not verify a completed sign-in. The operator must also
-verify these authorization-server settings through browser consent:
+Public discovery advertises CIMD, public-client token authentication and PKCE
+S256. Production tests on 2026-09-19 with Codex 0.155.1 and Claude Code 2.1.277
+passed discovery, then received `invalid_target` before consent. Neither flow
+exchanged tokens. These authorization-server requirements still apply:
 
 | | |
 |---|---|
 | **Client trust** | Permit the client's actual CIMD URL and redirect URI. `invalid_client` can indicate a missing trust entry. A dynamic-registration error can also indicate that CIMD discovery failed; check issuer metadata and client version before changing registration. |
 | **Resource registration** | A client sends the `resource` value this server publishes, `https://mcp.assinafy.com.br/mcp`. Assinafy answers `invalid_target` until that URL is registered as a resource it issues tokens for. |
 
-Audience validation remains a known limitation in v3.0.0. The current workspace
+Audience validation remains a known limitation through v3.0.1. The current workspace
 probe does not prove that the token was issued for this MCP resource. Follow-up
 integration with the OAuth2 server must establish and enforce that binding;
 changing client configuration does not resolve it.

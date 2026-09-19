@@ -20,6 +20,12 @@ seu workspace. Os clientes abaixo se identificam por um Client ID Metadata
 Document, que é como a Assinafy os reconhece; veja
 [situação da conexão](#situação-da-conexão).
 
+**Verificação em produção, 19/09/2026:** Codex e Claude Code concluíram a
+descoberta na `v3.0.1`, mas o login parou antes do consentimento com
+`invalid_target`. O operador da Assinafy precisa habilitar o recurso MCP para
+permitir acesso ao workspace. Mantenha a URL abaixo; veja a
+[recuperação de erros de login](docs/errors.md#authentication-and-transport).
+
 ## Codex
 
 ```bash
@@ -581,15 +587,17 @@ curl -sS -X POST https://mcp.assinafy.com.br/mcp \
 ```
 
 A descoberta pública anuncia CIMD, autenticação de cliente público e PKCE S256.
-Isso não comprova um login completo. O operador também precisa verificar estas
-configurações do servidor de autorização por consentimento no navegador:
+Nos testes em produção de 19/09/2026, Codex 0.155.1 e Claude Code 2.1.277
+concluíram a descoberta, mas receberam `invalid_target` antes do consentimento.
+Nenhum fluxo trocou tokens. Estes requisitos do servidor de autorização
+continuam necessários:
 
 | Configuração | Verificação |
 |---|---|
 | Confiança no cliente | Permitir a URL CIMD e o redirect reais do cliente. `invalid_client` pode indicar falta na lista de confiança. Um erro de registro dinâmico também pode indicar falha de descoberta CIMD; confira os metadados e a versão do cliente antes de mudar o registro. |
 | Registro do recurso | O cliente envia `https://mcp.assinafy.com.br/mcp` como `resource`. A Assinafy pode responder `invalid_target` enquanto essa URL não estiver registrada como recurso para o qual emite tokens. |
 
-A validação de audiência continua sendo uma limitação conhecida na v3.0.0.
+A validação de audiência continua sendo uma limitação conhecida até a v3.0.1.
 A consulta atual de workspace não comprova que o token foi emitido para este
 recurso MCP. Uma integração posterior com o servidor OAuth2 deve comprovar e
 validar esse vínculo; alterar a configuração do cliente não resolve a limitação.
