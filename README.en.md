@@ -108,8 +108,73 @@ codex mcp login assinafy --scopes account:read,documents:read,offline_access
 ```
 
 Your client stores and refreshes its tokens. If a grant expires or is revoked,
-let the client refresh it or reconnect through Assinafy. Never paste tokens into
-the conversation or tool arguments.
+let the client refresh it or reconnect through Assinafy. A connection ends 30
+days after you approve it, even when refreshed, so expect to reconnect monthly.
+Never paste tokens into the conversation or tool arguments.
+
+## What you can ask
+
+Talk to your assistant in plain language, in any language it understands. It
+picks the right tool, looks up names for you and confirms only what is
+ambiguous. Names, emails and dates below are examples.
+
+**Check on documents**
+
+| You say | What happens |
+|---|---|
+| “Which documents are still waiting for signatures?” | Lists documents in `pending_signature`, newest first |
+| “Has everyone signed the Acme service agreement?” | Finds the document and reports who signed and who is pending |
+| “Who hasn't signed the NDA yet, and when were they invited?” | Reads each pending signer's step and invitation history |
+| “What happened with the office lease this week?” | Shows the document's event timeline |
+| “Did the WhatsApp invitation to Carlos arrive?” | Reads the WhatsApp delivery history for that assignment |
+
+**Send for signature**
+
+| You say | What happens |
+|---|---|
+| “Send contract.pdf to Ana Lima, ana@example.com, for signature.” | Uploads the PDF, waits for processing and emails Ana an invitation |
+| “Upload proposal.pdf but don't send it yet. Call it Proposal v2.” | Uploads and renames it; no one is notified |
+| “Send Proposal v2 to Ana first, then Bruno once she signs.” | Requests signatures on the uploaded document with signing order |
+| “Send it with the message ‘Please sign by Friday’ and make it expire on 30 June.” | Adds the invitation message and expiry to the request |
+| “Send the lease to Ana and copy finance@example.com without asking them to sign.” | Saves the contact, then sends with a copy-only recipient |
+
+To send a file, attach it or point your assistant to it. The assistant reads the
+file and sends its contents; the server never opens paths on your computer.
+
+**Use templates**
+
+| You say | What happens |
+|---|---|
+| “What templates do we have?” | Lists saved templates with their roles and fields |
+| “Use the NDA template for Carla Souza, carla@example.com, with company name Acme Ltda.” | Matches the field, validates the value, fills the role and sends |
+| “Is 123.456.789-09 valid for the CPF field?” | Validates the value without creating anything |
+
+**Manage contacts**
+
+| You say | What happens |
+|---|---|
+| “Is Bruno Costa already in our contacts?” | Searches the workspace's signers |
+| “Add Bruno Costa, bruno@example.com, as a contact.” | Creates the contact; no invitation is sent |
+| “Change Carla's WhatsApp number to +55 11 91234-5678.” | Updates the contact, subject to Assinafy's verification rules |
+
+**Follow up**
+
+| You say | What happens |
+|---|---|
+| “Remind Ana to sign the service agreement.” | Checks she is still pending, then sends one reminder |
+| “Give the lease signers until 15 July.” | Changes the assignment's expiry; no reminder is sent |
+
+**Download, verify and clean up**
+
+| You say | What happens |
+|---|---|
+| “Download the signed copy of the Acme agreement.” | Checks that certification has finished, then downloads the certified PDF |
+| “Show me the first page of the contract.” | Downloads a page preview |
+| “Is this signature valid? Hash 3f2a…” | Checks the public signature record; works without signing in |
+| “Delete the draft Proposal v1.” | Deletes it if Assinafy still allows deletion in its current state |
+
+Your assistant cannot sign, accept terms or enter verification codes for
+someone else, and cannot create or edit templates. Those stay in Assinafy.
 
 ## Conversational behavior
 
@@ -204,8 +269,7 @@ Call `assinafy_find_documents` (`action: "activities"`) with `document_id` for t
 including each event's timestamp and payload. Inspect `notification_history` for
 sent/failed events and error details. For WhatsApp delivery, call
 `assinafy_find_documents` (`action: "notifications"`) with `document_id` and `assignment_id`.
-Staging WhatsApp messages may be simulated. Treat returned access links and codes
-as sensitive and share them only with their intended authorized recipients.
+Treat returned access links and codes as sensitive and share them only with their intended authorized recipients.
 
 **100% signing progress does not prove the certificated PDF is ready.** Check the
 document's lifecycle state and artifact availability before downloading it.

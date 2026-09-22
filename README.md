@@ -106,8 +106,73 @@ codex mcp login assinafy --scopes account:read,documents:read,offline_access
 ```
 
 Seu cliente guarda e renova os tokens. Se uma concessão expirar ou for revogada,
-deixe o cliente renová-la ou reconecte pela Assinafy. Nunca cole tokens na
-conversa ou nos argumentos das ferramentas.
+deixe o cliente renová-la ou reconecte pela Assinafy. Uma conexão termina 30
+dias após a sua aprovação, mesmo com renovação; espere reconectar todo mês.
+Nunca cole tokens na conversa ou nos argumentos das ferramentas.
+
+## O que você pode pedir
+
+Converse com o assistente em linguagem natural. Ele escolhe a ferramenta certa,
+localiza nomes por você e só confirma o que for ambíguo. Nomes, e-mails e datas
+abaixo são exemplos.
+
+**Acompanhar documentos**
+
+| Você diz | O que acontece |
+|---|---|
+| “Quais documentos ainda aguardam assinatura?” | Lista os documentos em `pending_signature`, mais recentes primeiro |
+| “Todo mundo já assinou o contrato de serviços da Acme?” | Encontra o documento e informa quem assinou e quem falta |
+| “Quem ainda não assinou o NDA e quando foi convidado?” | Lê a etapa e o histórico de convites de cada signatário pendente |
+| “O que aconteceu com o contrato de locação esta semana?” | Mostra a linha do tempo de eventos do documento |
+| “O convite por WhatsApp para o Carlos chegou?” | Lê o histórico de entrega por WhatsApp da solicitação |
+
+**Enviar para assinatura**
+
+| Você diz | O que acontece |
+|---|---|
+| “Envie contrato.pdf para Ana Lima, ana@example.com, assinar.” | Envia o PDF, aguarda o processamento e manda o convite por e-mail |
+| “Suba proposta.pdf mas não envie ainda. Chame de Proposta v2.” | Envia e renomeia o arquivo; ninguém é notificado |
+| “Envie a Proposta v2 primeiro para a Ana e depois para o Bruno.” | Solicita assinaturas no documento já enviado, com ordem de assinatura |
+| “Envie com a mensagem ‘Por favor, assine até sexta’ e validade até 30 de junho.” | Inclui a mensagem do convite e a data de expiração |
+| “Envie a locação para a Ana e coloque financeiro@example.com em cópia, sem pedir assinatura.” | Salva o contato e envia com um destinatário apenas em cópia |
+
+Para enviar um arquivo, anexe-o ou indique onde ele está. O assistente lê o
+arquivo e envia o conteúdo; o servidor nunca abre caminhos do seu computador.
+
+**Usar modelos**
+
+| Você diz | O que acontece |
+|---|---|
+| “Quais modelos temos?” | Lista os modelos salvos com papéis e campos |
+| “Use o modelo de NDA para Carla Souza, carla@example.com, com a empresa Acme Ltda.” | Associa o campo, valida o valor, preenche o papel e envia |
+| “123.456.789-09 é válido para o campo CPF?” | Valida o valor sem criar nada |
+
+**Gerenciar contatos**
+
+| Você diz | O que acontece |
+|---|---|
+| “O Bruno Costa já está nos contatos?” | Pesquisa os signatários do workspace |
+| “Adicione Bruno Costa, bruno@example.com, como contato.” | Cria o contato; nenhum convite é enviado |
+| “Troque o WhatsApp da Carla para +55 11 91234-5678.” | Atualiza o contato, respeitando as regras de verificação da Assinafy |
+
+**Acompanhar pendências**
+
+| Você diz | O que acontece |
+|---|---|
+| “Lembre a Ana de assinar o contrato de serviços.” | Confirma que ela ainda está pendente e envia um lembrete |
+| “Dê aos signatários da locação prazo até 15 de julho.” | Altera a expiração; nenhum lembrete é enviado |
+
+**Baixar, verificar e limpar**
+
+| Você diz | O que acontece |
+|---|---|
+| “Baixe a cópia assinada do contrato da Acme.” | Confirma que a certificação terminou e baixa o PDF certificado |
+| “Mostre a primeira página do contrato.” | Baixa uma prévia da página |
+| “Esta assinatura é válida? Hash 3f2a…” | Consulta o registro público de assinatura; funciona sem login |
+| “Exclua o rascunho Proposta v1.” | Exclui o documento se a Assinafy ainda permitir no estado atual |
+
+O assistente não assina, não aceita termos nem informa códigos de verificação por
+outra pessoa, e não cria nem edita modelos. Isso continua na Assinafy.
 
 ## Comportamento na conversa
 
@@ -213,8 +278,7 @@ Chame `assinafy_find_documents` (`action: "activities"`) com `document_id` para 
 dos eventos, incluindo data e payload de cada um. Inspecione
 `notification_history` em busca de eventos enviados/falhos e detalhes de erro.
 Para entrega por WhatsApp, chame `assinafy_find_documents` (`action: "notifications"`) com
-`document_id` e `assignment_id`. Mensagens de WhatsApp em staging podem ser
-simuladas. Trate links e códigos de acesso retornados como sensíveis e
+`document_id` e `assignment_id`. Trate links e códigos de acesso retornados como sensíveis e
 compartilhe apenas com os destinatários autorizados.
 
 **100% de progresso não prova que o PDF certificado está pronto.** Confira o

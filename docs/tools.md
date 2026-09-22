@@ -97,7 +97,7 @@ Input:
 | `message` | no | Invitation message |
 | `expires_at` | no | RFC 3339 timestamp |
 | `account_id` | no | Authorized workspace ID; discovered automatically in OAuth mode |
-| `max_wait_secs` | no | Processing timeout, 1–600; default 30 |
+| `max_wait_secs` | no | Processing timeout, 1–600; default 30. Waits over about two minutes can outlive the delegated API token; the error keeps the uploaded document ID for `from_document` |
 | `poll_secs` | no | Poll interval, 1 through `max_wait_secs`; default 2 |
 
 Result:
