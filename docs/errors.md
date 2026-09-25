@@ -17,13 +17,13 @@ error message. Keep credentials and authorization codes out of support reports.
 |---|---|
 | 400 | Malformed request, credential override attempt, duplicate Authorization headers, a token in the query string, a message repeating a JSON key, an unknown tool name, or a batch over 20 messages |
 | 401 | A tool needing a workspace was called with no token, an unusable one, or a credential that is not an Assinafy OAuth token; also an unauthenticated request over 64 KiB. Follow the `resource_metadata` challenge and reconnect |
-| 403 with `insufficient_scope` | The validated grant lacks an action permission, or exchange refused its scopes. Consent for the scopes in `WWW-Authenticate` and retry; the workflow has not started |
+| 403 with `insufficient_scope` | The validated grant lacks an action permission. Consent for the scopes in `WWW-Authenticate`, in addition to those already granted, and retry; the workflow has not started |
 | Other 403 | Forbidden Origin, unexpected public Host, or an area no OAuth token may reach; correct the client, proxy, or the request |
 | 405 on an event-stream GET | Expected: this stateless server does not provide a standalone SSE stream; use POST Streamable HTTP |
 | 415 | A POST to `/mcp` whose `Content-Type` is not `application/json` |
 | 413 | A verified request exceeds the 40 MiB limit. An anonymous request is capped at 64 KiB; a bearer token is verified after at most 64 KiB plus one byte, before buffering a larger body |
 | 429 | Assinafy is rate-limiting authorization checks; honour the `Retry-After` header |
-| 503 | The authentication service is unavailable; retry later and contact Assinafy support if it persists |
+| 503 | The authentication service is unavailable, or it refused or withheld a permission your grant already holds, which consenting again cannot change; retry later and contact Assinafy support if it persists |
 
 The HTTP authorization responses above carry no body beyond the status text, so
 no Assinafy description or credential leaks through them. Upstream messages do
@@ -36,7 +36,9 @@ The MCP checks permissions returned by the issuer before executing any action.
 A missing action scope returns HTTP `403 insufficient_scope` before mutations.
 Assinafy also enforces authorization on every business-API call; revocation,
 membership changes or other upstream failures during a workflow can still
-produce a `200` JSON-RPC result with `isError: true`. Inspect a retained document
+produce a `200` JSON-RPC result with `isError: true`. A long workflow renews the
+server's short-lived API token as it goes; if Assinafy refuses a renewal, the
+tool stops with such an error instead of retrying. Inspect a retained document
 ID before retrying a partially completed workflow.
 
 See [workspaces and permissions](../README.en.md#workspaces-and-permissions) for scope selection and reconnection.
@@ -133,7 +135,9 @@ the caller:
 For `assinafy_request_signatures` (`action: "from_pdf"`), a failure after upload reports the
 retained document ID. Do not blindly retry the whole workflow after an
 uncertain assignment response; inspect or delete the retained document first
-to avoid duplicate documents or notifications.
+to avoid duplicate documents or notifications. If the connection's access token
+ends within `max_wait_secs` plus two minutes, the tool uploads nothing and says
+how many seconds remain; retry with a shorter wait or after the client renews.
 
 If the retained document has no assignment and its state permits signing, use
 `assinafy_request_signatures` (`action: "from_document"`) to continue with confirmed signer IDs. An existing

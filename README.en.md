@@ -91,9 +91,10 @@ Request `offline_access` when the client supports refresh tokens for background
 access.
 
 A missing permission returns HTTP `403 insufficient_scope` with the scopes to
-approve before the workflow starts. Reauthorize with the requested permissions
-and try again. Other failures can still interrupt a workflow after it starts;
-inspect any retained `document_id` before retrying.
+approve before the workflow starts. Reauthorize, adding the requested
+permissions to those already granted, and try again. Other failures can still
+interrupt a workflow after it starts; inspect any retained `document_id` before
+retrying.
 
 For Codex, explicitly authorize the complete document and template flow with:
 
@@ -108,8 +109,9 @@ codex mcp login assinafy --scopes account:read,documents:read,offline_access
 ```
 
 Your client stores and refreshes its tokens. If a grant expires or is revoked,
-let the client refresh it or reconnect through Assinafy. A connection ends 30
-days after you approve it, even when refreshed, so expect to reconnect monthly.
+let the client refresh it or reconnect through Assinafy. With `offline_access`,
+each refresh returns a new refresh token with a fresh 30 days, so a connection
+expires only after 30 days without a refresh; then reconnect.
 Never paste tokens into the conversation or tool arguments.
 
 ## What you can ask
@@ -568,8 +570,8 @@ No mutating API request is automatically retried by the MCP server.
 | Result | Client action |
 |---|---|
 | HTTP 401 | Let the client refresh its grant or reconnect through Assinafy consent. |
-| HTTP 403 with `insufficient_scope` | Authorize the requested scope set and retry after consent. |
-| Tool error naming a missing scope | Assinafy refused the call. A multi-step tool may have completed earlier steps; read its error for a retained `document_id` and continue from there. |
+| HTTP 403 with `insufficient_scope` | Authorize the requested scopes in addition to those already granted, and retry after consent. |
+| Tool error naming a missing scope | Assinafy refused the call. Reconnect adding the scope it names; retrying without new consent fails again. A multi-step tool may have completed earlier steps; read its error for a retained `document_id` and continue from there. |
 | Tool result with `isError: true` | Read the Assinafy error and inspect the current document before retrying a mutation. |
 | Invalid contact, expired assignment, or unavailable artifact | Correct the request or wait for the required lifecycle state. |
 | Rate limit or uncertain network response | Respect retry timing; inspect state and delivery history before repeating a write. |

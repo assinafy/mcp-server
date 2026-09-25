@@ -89,9 +89,10 @@ ou na tela de consentimento e usar as ações permitidas por eles. A API exige
 `offline_access` quando o cliente usar refresh tokens para acesso em segundo plano.
 
 Uma permissão ausente retorna HTTP `403 insufficient_scope`, com os escopos a
-aprovar, antes de iniciar o fluxo. Autorize as permissões solicitadas e tente
-novamente. Outras falhas podem interromper uma operação depois de iniciada;
-inspecione qualquer `document_id` preservado antes de repetir a operação.
+aprovar, antes de iniciar o fluxo. Autorize as permissões solicitadas somadas às
+já concedidas e tente novamente. Outras falhas podem interromper uma operação
+depois de iniciada; inspecione qualquer `document_id` preservado antes de repetir
+a operação.
 
 Para o Codex, autorize explicitamente o fluxo completo de documentos e templates:
 
@@ -106,8 +107,9 @@ codex mcp login assinafy --scopes account:read,documents:read,offline_access
 ```
 
 Seu cliente guarda e renova os tokens. Se uma concessão expirar ou for revogada,
-deixe o cliente renová-la ou reconecte pela Assinafy. Uma conexão termina 30
-dias após a sua aprovação, mesmo com renovação; espere reconectar todo mês.
+deixe o cliente renová-la ou reconecte pela Assinafy. Com `offline_access`, cada
+renovação devolve um novo refresh token com mais 30 dias de validade; a conexão
+só expira após 30 dias sem renovação, e então é preciso reconectar.
 Nunca cole tokens na conversa ou nos argumentos das ferramentas.
 
 ## O que você pode pedir
@@ -594,8 +596,8 @@ Nenhuma requisição de escrita é repetida automaticamente pelo servidor MCP.
 | Resultado | Ação do cliente |
 |---|---|
 | HTTP 401 | Deixe o cliente renovar a concessão ou reconectar pelo consentimento da Assinafy. |
-| HTTP 403 com `insufficient_scope` | Autorize o conjunto de escopos pedido e tente de novo após o consentimento. |
-| Erro de ferramenta nomeando um escopo ausente | A Assinafy recusou a chamada. Uma ferramenta de várias etapas pode ter concluído etapas anteriores; leia o erro em busca de um `document_id` preservado e continue dali. |
+| HTTP 403 com `insufficient_scope` | Autorize os escopos pedidos somados aos já concedidos e tente de novo após o consentimento. |
+| Erro de ferramenta nomeando um escopo ausente | A Assinafy recusou a chamada. Reconecte somando o escopo indicado; tentar de novo sem novo consentimento falha outra vez. Uma ferramenta de várias etapas pode ter concluído etapas anteriores; leia o erro em busca de um `document_id` preservado e continue dali. |
 | Resultado de ferramenta com `isError: true` | Leia o erro da Assinafy e inspecione o documento atual antes de repetir uma escrita. |
 | Contato inválido, assignment expirado ou artefato indisponível | Corrija a requisição ou aguarde o estado necessário do ciclo de vida. |
 | Limite de taxa ou resposta de rede incerta | Respeite o tempo de nova tentativa; inspecione o estado e o histórico de entrega antes de repetir uma escrita. |
