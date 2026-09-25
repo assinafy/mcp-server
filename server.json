@@ -1,0 +1,27 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.assinafy/mcp-server",
+  "title": "Assinafy",
+  "description": "Send documents for legally valid e-signature in Brazil, track signers and download signed files.",
+  "version": "3.0.7",
+  "websiteUrl": "https://www.assinafy.com.br/api",
+  "repository": {
+    "url": "https://github.com/assinafy/mcp-server",
+    "source": "github"
+  },
+  "icons": [
+    {
+      "src": "https://www.assinafy.com.br/images/favicons/apple-touch-icon.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "180x180"
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.assinafy.com.br/mcp"
+    }
+  ]
+}
