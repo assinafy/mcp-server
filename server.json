@@ -3,7 +3,7 @@
   "name": "io.github.assinafy/mcp-server",
   "title": "Assinafy",
   "description": "Send documents for legally valid e-signature in Brazil, track signers and download signed files.",
-  "version": "3.0.7",
+  "version": "3.0.8",
   "websiteUrl": "https://www.assinafy.com.br/api",
   "repository": {
     "url": "https://github.com/assinafy/mcp-server",
