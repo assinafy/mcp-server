@@ -1,6 +1,6 @@
 # Conversational tool reference
 
-The server exposes **11 tools covering the same 24 operations**. Tools match chat
+The server exposes **14 tools covering 27 operations**. Tools match chat
 tasks; related actions share an entry point. Every grouped call requires an
 explicit `action`. Its `oneOf` schema enforces the selected action's required
 fields and rejects arguments belonging to another action before any API call.
@@ -19,6 +19,9 @@ Deletion and public verification keep their standalone inputs.
 | `assinafy_download_document` | `artifact`, `page` | Read-only |
 | `assinafy_delete_document` | No action argument | Destructive write |
 | `assinafy_verify_document` | No action argument | Read-only; public |
+| `assinafy_show_document` | No action argument | Read-only; [visual card](#visual-cards) |
+| `assinafy_review_signature_request` | No action argument | Read-only; [visual card](#visual-cards) |
+| `assinafy_place_fields` | No action argument | Read-only; [visual card](#visual-cards) |
 
 All tools are open-world and marked non-idempotent for client retry purposes.
 Annotations apply to the whole tool, so a tool containing an update advertises a
@@ -264,6 +267,26 @@ actual Assinafy SHA-1 signature hash. This is the only tool reachable without
 connecting. It sends no credential upstream and returns the verification object,
 including `is_valid` when supplied. The server refuses to start if another tool
 has no scope policy without being explicitly reviewed as public.
+
+## Visual cards
+
+Three display tools render interactive cards in hosts that support
+[MCP Apps](https://modelcontextprotocol.io/extensions/apps), such as Claude (web
+and desktop) and ChatGPT. Every other client, including Claude Code, receives the
+same result as a plain-text summary, so no workflow depends on the UI. Each tool is
+read-only: a card's buttons call the regular tools above, under the same OAuth grant.
+
+| Tool | Input | Card | Text summary |
+|---|---|---|---|
+| `assinafy_show_document` | `document_id` | Status, who signed, who is pending, expiry; **Remind** the next pending signer and **Refresh** | Status, signed count, pending names, expiry |
+| `assinafy_review_signature_request` | The `from_document` arguments | Recipients with emails and verification, expiry; one **Send** button | Recipients and “nothing has been sent” |
+| `assinafy_place_fields` | The `from_document` arguments except `method` and `entries` | Fullscreen editor: place signature, initials, date and custom fields on each page, then **Send** with `method: "collect"` | Page IDs and sizes in 150-DPI pixels and field IDs, to build `entries` |
+
+Send buttons first recheck the document and stop if it already has a signature
+request, so a reloaded card or a send from the chat cannot duplicate invitations.
+After a send, the card tells the assistant what happened. Cards never receive
+signing URLs. `assinafy_place_fields` requires a document in `metadata_ready` with
+no assignment; placements are validated against each page's bounds before sending.
 
 ## Migrating from per-operation tools
 

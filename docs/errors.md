@@ -43,6 +43,18 @@ ID before retrying a partially completed workflow.
 
 See [workspaces and permissions](../README.en.md#workspaces-and-permissions) for scope selection and reconnection.
 
+## ChatGPT document monitoring
+
+When ChatGPT Work watches a document through
+[MCP Events](https://developers.openai.com/plugins/build/mcp-events), subscription
+errors use these JSON-RPC codes:
+
+| Code | Meaning | Action |
+|---|---|---|
+| `-32015` | ChatGPT's callback could not be verified (`data.reason`: `invalid_url`, `timeout`, `connection_failed` or `challenge_failed`) | Retry later; ChatGPT manages its own callback |
+| `-32602` | Invalid request, such as an unknown event, a document outside the workspace, or the subscription limit | Correct the request |
+| `-32603` | Temporary condition | Retry with backoff |
+
 ## Error types
 
 ### `APIError`

@@ -52,6 +52,11 @@ if a registration choice is offered, leave optional client credentials unset,
 and complete the Assinafy sign-in and workspace selection. See
 [ChatGPT authentication](https://developers.openai.com/plugins/build/auth).
 
+In ChatGPT Work, the server can also notify ChatGPT when a monitored document's
+status changes or it becomes certificated, through
+[MCP Events](https://developers.openai.com/plugins/build/mcp-events). Ask ChatGPT to
+watch a document; it subscribes and refreshes the subscription on its own.
+
 ## VS Code / GitHub Copilot Chat
 
 Add this entry to VS Code's MCP configuration:
@@ -194,13 +199,24 @@ do not repeatedly ask for the same confirmation.
 | “Remind Ana.” | Inspect the current assignment, then `assinafy_follow_up_assignment` with `action: "resend"` for that signer |
 | “Get the signed copy.” | Inspect certification and artifact availability, then download with `action: "artifact"` and `artifact: "certificated"` |
 
+**Cards in Claude and ChatGPT**
+
+| You say | What happens |
+|---|---|
+| “Show me where the Acme agreement stands.” | A status card: who signed, who is pending, expiry, with **Remind** and **Refresh** |
+| “Let me review before sending the NDA to Ana and Bruno.” | A review card with recipients and verification; nothing is sent until you press **Send** |
+| “I want to place the signature fields on the lease myself.” | A fullscreen editor to place fields on each page, then **Send** |
+
+Other clients, including Claude Code, get the same information as text. See
+[visual cards](docs/tools.md#visual-cards).
+
 The model selects the tool and action; the conversation should report the result
 and useful next step in ordinary language. Keep raw IDs and base64 out of normal
 chat replies. Reads never send invitations. Preparation never sends invitations.
 
 ## Document flow
 
-The server provides 11 tools covering 24 document operations. Your assistant
+The server provides 14 tools covering 27 document operations. Your assistant
 chooses tools and actions from the catalog; you describe what you want to do.
 See the [tool reference](docs/tools.md) for inputs and examples.
 
@@ -577,6 +593,7 @@ No mutating API request is automatically retried by the MCP server.
 | Rate limit or uncertain network response | Respect retry timing; inspect state and delivery history before repeating a write. |
 | HTTP 429 | Assinafy is rate-limiting authorization checks; honour `Retry-After`. |
 | HTTP 503 during authentication | The service is temporarily unavailable. Retry later; contact Assinafy support if it persists. |
+| A card says “That didn't work” | Nothing was changed by that click; continue from the chat, which reads the current state first. |
 
 See [error recovery](docs/errors.md) for full response semantics and
 [tool inputs](docs/tools.md) for field reference.

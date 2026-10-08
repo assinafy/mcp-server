@@ -52,6 +52,11 @@ houver uma opção de registro, deixe as credenciais opcionais em branco e concl
 a entrada na Assinafy e a seleção de workspace. Veja a
 [autenticação do ChatGPT](https://developers.openai.com/plugins/build/auth).
 
+No ChatGPT Work, o servidor também pode avisar o ChatGPT quando o status de um
+documento monitorado muda ou quando ele é certificado, por meio do
+[MCP Events](https://developers.openai.com/plugins/build/mcp-events). Peça ao ChatGPT
+para acompanhar um documento; ele cria e renova a assinatura sozinho.
+
 ## VS Code / GitHub Copilot Chat
 
 Adicione esta entrada à configuração MCP do VS Code:
@@ -191,13 +196,24 @@ para enviar, lembrar ou excluir já autoriza aquela ação; não repita a confir
 | “Lembre a Ana.” | Conferir o assignment; chamar `assinafy_follow_up_assignment` com `action: "resend"` para ela |
 | “Baixe a cópia assinada.” | Conferir certificação e artefato; baixar com `action: "artifact"` e `artifact: "certificated"` |
 
+**Cartões no Claude e no ChatGPT**
+
+| Você diz | O que acontece |
+|---|---|
+| “Mostre como está o contrato da Acme.” | Um cartão de status: quem assinou, quem falta, a expiração, com **Lembrar** e **Atualizar** |
+| “Quero revisar antes de enviar o NDA para a Ana e o Bruno.” | Um cartão de revisão com destinatários e verificação; nada é enviado até você clicar em **Enviar** |
+| “Quero posicionar eu mesmo os campos de assinatura no contrato de locação.” | Um editor em tela cheia para posicionar campos em cada página e depois **Enviar** |
+
+Os demais clientes, incluindo o Claude Code, recebem as mesmas informações em
+texto. Veja os [cartões visuais](docs/tools.md#visual-cards).
+
 O modelo escolhe a ferramenta e a ação. A resposta deve explicar o resultado em
 linguagem comum, sem expor IDs ou base64 desnecessários. Leituras e preparação
 não enviam convites. Consulte [todas as ferramentas e entradas](docs/tools.md).
 
 ## Fluxo do documento
 
-O servidor oferece 11 ferramentas para 24 operações de documentos. Seu assistente
+O servidor oferece 14 ferramentas para 27 operações de documentos. Seu assistente
 escolhe as ferramentas e ações do catálogo; você descreve o que quer fazer.
 Consulte a [referência de ferramentas](docs/tools.md) para entradas e exemplos.
 
@@ -603,6 +619,7 @@ Nenhuma requisição de escrita é repetida automaticamente pelo servidor MCP.
 | Limite de taxa ou resposta de rede incerta | Respeite o tempo de nova tentativa; inspecione o estado e o histórico de entrega antes de repetir uma escrita. |
 | HTTP 429 | A Assinafy está limitando as verificações de autorização; respeite o `Retry-After`. |
 | HTTP 503 na autenticação | Serviço temporariamente indisponível. Tente mais tarde; contate o suporte da Assinafy se persistir. |
+| Um cartão diz “Não foi possível concluir” | Esse clique não alterou nada; continue pelo chat, que consulta o estado atual primeiro. |
 
 Veja [erros e recuperação](docs/errors.md) e a [referência de entradas](docs/tools.md).
 
