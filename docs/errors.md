@@ -17,7 +17,7 @@ error message. Keep credentials and authorization codes out of support reports.
 |---|---|
 | 400 | Malformed request, credential override attempt, duplicate Authorization headers, a token in the query string, a message repeating a JSON key, an unknown tool name, or a batch over 20 messages |
 | 401 | A tool needing a workspace was called with no token, an unusable one, or a credential that is not an Assinafy OAuth token; also an unauthenticated request over 64 KiB. Follow the `resource_metadata` challenge and reconnect |
-| 403 with `insufficient_scope` | The validated grant lacks an action permission. Consent for the scopes in `WWW-Authenticate`, in addition to those already granted, and retry; the workflow has not started |
+| 403 with `insufficient_scope` | The validated grant lacks a tool permission. Consent for the scopes in `WWW-Authenticate`, in addition to those already granted, and retry; the workflow has not started |
 | Other 403 | Forbidden Origin, unexpected public Host, or an area no OAuth token may reach; correct the client, proxy, or the request |
 | 405 on an event-stream GET | Expected: this stateless server does not provide a standalone SSE stream; use POST Streamable HTTP |
 | 415 | A POST to `/mcp` whose `Content-Type` is not `application/json` |
@@ -32,8 +32,8 @@ refresh a client's tokens; refresh is the client's job. A
 credential or workspace override in tool arguments or `_meta` returns a tool
 error before the document operation runs.
 
-The MCP checks permissions returned by the issuer before executing any action.
-A missing action scope returns HTTP `403 insufficient_scope` before mutations.
+The MCP checks permissions returned by the issuer before executing any tool.
+A missing tool scope returns HTTP `403 insufficient_scope` before mutations.
 Assinafy also enforces authorization on every business-API call; revocation,
 membership changes or other upstream failures during a workflow can still
 produce a `200` JSON-RPC result with `isError: true`. A long workflow renews the
@@ -144,7 +144,7 @@ the caller:
   exact-email lookup, allowing the operational workflow to return the signer
   created by a concurrent request.
 
-For `assinafy_request_signatures` (`action: "from_pdf"`), a failure after upload reports the
+For `assinafy_send_pdf_for_signature`, a failure after upload reports the
 retained document ID. Do not blindly retry the whole workflow after an
 uncertain assignment response; inspect or delete the retained document first
 to avoid duplicate documents or notifications. If the connection's access token
@@ -152,7 +152,7 @@ ends within `max_wait_secs` plus two minutes, the tool uploads nothing and says
 how many seconds remain; retry with a shorter wait or after the client renews.
 
 If the retained document has no assignment and its state permits signing, use
-`assinafy_request_signatures` (`action: "from_document"`) to continue with confirmed signer IDs. An existing
+`assinafy_create_assignment` to continue with confirmed signer IDs. An existing
 assignment should be tracked instead of recreated. Reading a document performs no
 document mutation or notification. A successful signer-contact correction may
 invalidate earlier access links; use an authorized resend after checking the

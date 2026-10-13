@@ -89,7 +89,7 @@ Você configura a URL do MCP. Os metadados anunciam
 `account:read documents:read documents:write templates:read templates:write`
 para todo o catálogo. O login pede o conjunto completo por padrão, cobrindo todas
 as ferramentas com um consentimento. Você pode escolher menos escopos no cliente
-ou na tela de consentimento e usar as ações permitidas por eles. A API exige
+ou na tela de consentimento e usar as ferramentas permitidas por eles. A API exige
 `templates:write` para gerar um documento de template salvo, e `documents:write` para validar valores de campos. Peça
 `offline_access` quando o cliente usar refresh tokens para acesso em segundo plano.
 
@@ -190,11 +190,11 @@ para enviar, lembrar ou excluir já autoriza aquela ação; não repita a confir
 
 | Pedido | Fluxo |
 |---|---|
-| “Envie este PDF para Ana.” | `assinafy_request_signatures` com `action: "from_pdf"`, após resolver o contato autorizado |
-| “Use nosso template de NDA.” | Localizar template, papéis e campos; validar valores; solicitar com `action: "from_template"` |
-| “Ana já assinou?” | Localizar o documento e consultar `action: "get"`; informar pendências e estado atual |
-| “Lembre a Ana.” | Conferir o assignment; chamar `assinafy_follow_up_assignment` com `action: "resend"` para ela |
-| “Baixe a cópia assinada.” | Conferir certificação e artefato; baixar com `action: "artifact"` e `artifact: "certificated"` |
+| “Envie este PDF para Ana.” | `assinafy_send_pdf_for_signature`, após resolver o contato autorizado |
+| “Use nosso template de NDA.” | Localizar template, papéis e campos; validar valores; chamar `assinafy_create_document_from_template` |
+| “Ana já assinou?” | `assinafy_list_documents` e depois `assinafy_get_document`; informar pendências e estado atual |
+| “Lembre a Ana.” | Conferir o assignment; chamar `assinafy_resend_notification` para ela |
+| “Baixe a cópia assinada.” | Conferir certificação e artefato; `assinafy_download_document` com `artifact: "certificated"` |
 
 **Cartões no Claude e no ChatGPT**
 
@@ -207,14 +207,14 @@ para enviar, lembrar ou excluir já autoriza aquela ação; não repita a confir
 Os demais clientes, incluindo o Claude Code, recebem as mesmas informações em
 texto. Veja os [cartões visuais](docs/tools.md#visual-cards).
 
-O modelo escolhe a ferramenta e a ação. A resposta deve explicar o resultado em
+O modelo escolhe a ferramenta. A resposta deve explicar o resultado em
 linguagem comum, sem expor IDs ou base64 desnecessários. Leituras e preparação
 não enviam convites. Consulte [todas as ferramentas e entradas](docs/tools.md).
 
 ## Fluxo do documento
 
-O servidor oferece 14 ferramentas para 27 operações de documentos. Seu assistente
-escolhe as ferramentas e ações do catálogo; você descreve o que quer fazer.
+O servidor oferece 27 ferramentas, uma por operação. Seu assistente
+escolhe as ferramentas do catálogo; você descreve o que quer fazer.
 Consulte a [referência de ferramentas](docs/tools.md) para entradas e exemplos.
 
 ```mermaid
@@ -235,17 +235,16 @@ flowchart TD
 
 ### 1. Localizar o documento e conferir seu estado
 
-Use `assinafy_find_documents` (`action: "list"`) com `search`, `status`, `page` e `per_page`. Ele
+Use `assinafy_list_documents` com `search`, `status`, `page` e `per_page`. Ele
 também aceita `sort`, que recebe `name` ou `updated_at`, opcionalmente prefixado
 por `-` para inverter a ordem. As páginas
 começam em 1 e trazem no máximo 100 registros; siga o `meta` de paginação
 retornado em vez de supor que a primeira página contém todos os documentos.
 
-Por exemplo, chame `assinafy_find_documents` (`action: "list"`) com:
+Por exemplo, chame `assinafy_list_documents` com:
 
 ```json
 {
-  "action": "list",
   "status": "pending_signature",
   "sort": "-updated_at",
   "page": 1,
@@ -253,11 +252,10 @@ Por exemplo, chame `assinafy_find_documents` (`action: "list"`) com:
 }
 ```
 
-Identificado o documento correto, chame `assinafy_find_documents` (`action: "get"`):
+Identificado o documento correto, chame `assinafy_get_document`:
 
 ```json
 {
-  "action": "get",
   "document_id": "DOCUMENT_ID"
 }
 ```
@@ -285,17 +283,17 @@ estado terminal ou no tempo combinado.
 
 ### 2. Inspecionar progresso e entrega
 
-Use `assinafy_find_documents` (`action: "get"`) para identificar quem realmente está pendente. O
+Use `assinafy_get_document` para identificar quem realmente está pendente. O
 assignment traz `id`, `signers[].id`, `completed`, `step`, `notified`,
 `notification_history` e as URLs de assinatura quando disponíveis. Campos
 opcionais ausentes significam que a API não forneceu aquela informação. Um
 signatário aguardando uma etapa anterior não está necessariamente sofrendo falha
 de entrega.
 
-Chame `assinafy_find_documents` (`action: "activities"`) com `document_id` para a linha do tempo
+Chame `assinafy_list_document_activities` com `document_id` para a linha do tempo
 dos eventos, incluindo data e payload de cada um. Inspecione
 `notification_history` em busca de eventos enviados/falhos e detalhes de erro.
-Para entrega por WhatsApp, chame `assinafy_find_documents` (`action: "notifications"`) com
+Para entrega por WhatsApp, chame `assinafy_list_whatsapp_notifications` com
 `document_id` e `assignment_id`. Trate links e códigos de acesso retornados como sensíveis e
 compartilhe apenas com os destinatários autorizados.
 
@@ -309,11 +307,10 @@ confirme que a instrução do usuário autoriza aquele lembrete. Escopos OAuth
 autorizam o acesso a uma operação; eles não escolhem um destinatário pelo
 usuário. Um lembrete consome créditos de notificação. Um pedido explícito de
 lembrete já autoriza aquela ação; pergunte apenas se o destinatário ou a ação
-estiverem ambíguos. Chame `assinafy_follow_up_assignment` (`action: "resend"`) com:
+estiverem ambíguos. Chame `assinafy_resend_notification` com:
 
 ```json
 {
-  "action": "resend",
   "document_id": "DOCUMENT_ID",
   "assignment_id": "ASSIGNMENT_ID",
   "signer_id": "SIGNER_ID"
@@ -328,12 +325,11 @@ novo. Respeite limites de taxa e o tempo de nova tentativa.
 
 ### 4. Atualizar a expiração ou corrigir dados do destinatário
 
-Use `assinafy_follow_up_assignment` (`action: "set_expiration"`) com os IDs dos detalhes atuais do
+Use `assinafy_set_assignment_expiration` com os IDs dos detalhes atuais do
 documento e um timestamp RFC 3339 explícito:
 
 ```json
 {
-  "action": "set_expiration",
   "document_id": "DOCUMENT_ID",
   "assignment_id": "ASSIGNMENT_ID",
   "expires_at": "2027-01-31T23:59:59-03:00"
@@ -344,10 +340,10 @@ Escolha a data e o fuso realmente pedidos pelo usuário; o exemplo ilustra apena
 o formato. Leia o assignment atualizado para confirmar a data resultante. Não
 suponha que atualizar a expiração também enviou um novo convite.
 
-Encontre contatos por `assinafy_find_signers` (`action: "list"`) ou `assinafy_find_signers` (`action: "get"`).
-`assinafy_save_signer` (`action: "update"`) aceita `full_name`, `email`, `whatsapp_phone_number` e
-`government_id`. Um contato é compartilhado dentro do workspace, então revise a
-alteração pretendida antes de aplicá-la. A Assinafy bloqueia mudanças em um canal
+Encontre contatos por `assinafy_list_signers` ou `assinafy_get_signer`.
+`assinafy_update_signer` aceita `full_name`, `email` e `whatsapp_phone_number`.
+Um contato é compartilhado dentro do workspace, então revise a alteração
+pretendida antes de aplicá-la. A Assinafy bloqueia mudanças em um canal
 já verificado em um documento em andamento. Alterar um canal não verificado
 invalida links e códigos antigos; depois de uma correção bem-sucedida, use um
 reenvio autorizado para entregar o link novo. Preserve e informe uma recusa da
@@ -355,11 +351,10 @@ Assinafy.
 
 ### 5. Preparar e enviar um novo PDF
 
-Para o fluxo comum por e-mail, chame `assinafy_request_signatures` (`action: "from_pdf"`):
+Para o fluxo comum por e-mail, chame `assinafy_send_pdf_for_signature`:
 
 ```json
 {
-  "action": "from_pdf",
   "file_name": "contrato.pdf",
   "file_base64": "BYTES_DO_PDF_EM_BASE64",
   "signers": [
@@ -380,28 +375,27 @@ Guarde `document.id`, `assignment.id` e `signer_ids` do resultado.
 
 Para preparar antes de enviar, use esta sequência:
 
-1. `assinafy_prepare_document` (`action: "upload"`) aceita `file_name` e `file_base64`, devolve um
+1. `assinafy_upload_document` aceita `file_name` e `file_base64`, devolve um
    documento e não envia convites. PDFs podem ter até 25 MiB e 2.000 páginas; a
    Assinafy impõe o limite de páginas. O servidor MCP nunca abre um caminho de
    arquivo local.
-2. `assinafy_find_documents` (`action: "get"`) confere a prontidão e fornece IDs e dimensões de
-   página. Use `assinafy_prepare_document` (`action: "rename"`) com `document_id` e `name` enquanto
+2. `assinafy_get_document` confere a prontidão e fornece IDs e dimensões de
+   página. Use `assinafy_rename_document` com `document_id` e `name` enquanto
    renomear é permitido: antes de existir um assignment, em `uploaded` ou
    `metadata_ready`.
-3. `assinafy_find_signers` (`action: "list"`) / `assinafy_save_signer` (`action: "create"`) fornecem os IDs dos
+3. `assinafy_list_signers` / `assinafy_create_signer` fornecem os IDs dos
    signatários. Criar um contato sozinho não envia solicitação de assinatura. A
    criação avulsa pode retornar conflito; procure o contato existente antes de
    tentar de novo.
-4. `assinafy_request_signatures` (`action: "from_document"`) inicia a assinatura do documento existente usando
+4. `assinafy_create_assignment` inicia a assinatura do documento existente usando
    os IDs de signatário. Consome a franquia de documentos da workspace e, no
    WhatsApp, créditos de notificação — use os destinatários e a ação autorizados pelo usuário. Guarde o
    assignment e as identidades retornadas para o acompanhamento.
 
-Exemplo de argumentos de `assinafy_request_signatures` (`action: "from_document"`):
+Exemplo de argumentos de `assinafy_create_assignment`:
 
 ```json
 {
-  "action": "from_document",
   "document_id": "DOCUMENT_ID",
   "method": "virtual",
   "signers": [
@@ -423,9 +417,9 @@ opcionais (IDs de signatário), `message`, `expires_at` e ordem de assinatura po
 `step`. Os métodos de verificação são `Email`, `Whatsapp` e
 `DigitalCertificate`; as notificações usam os canais Email/WhatsApp
 documentados. WhatsApp exige o contato e a assinatura de plano adequados;
-assinatura com certificado exige os dados de identidade do signatário e o
-recurso habilitado na conta. A Assinafy valida esses requisitos. Nenhuma resposta
-traz custo ou saldo: criar um documento e enviar uma notificação por WhatsApp
+assinatura com certificado exige o recurso habilitado na conta e o CPF/CNPJ do
+signatário já cadastrado no contato na Assinafy; este servidor nunca o coleta.
+A Assinafy valida esses requisitos. Nenhuma resposta traz custo ou saldo: criar um documento e enviar uma notificação por WhatsApp
 consomem a franquia de documentos e os créditos de notificação da workspace pelas
 taxas publicadas, e o saldo restante se consulta no Assinafy, não por este
 servidor. Reutilize a autorização do usuário para a ação pedida; pergunte apenas
@@ -437,23 +431,22 @@ informar; os valores devem ser contíguos a partir de 1. Pessoas na mesma etapa
 assinam em paralelo. Um signatário com certificado digital fica sozinho na etapa
 dele.
 
-Para `collect`, aguarde `metadata_ready`. Use `assinafy_check_fields` (`action: "list"`)
-(opcionalmente `include_standard: true`) e `assinafy_check_fields` (`action: "get"`) para as
+Para `collect`, aguarde `metadata_ready`. Use `assinafy_list_fields`
+(opcionalmente `include_standard: true`) e `assinafy_get_field` para as
 definições de campo. Passe `entries[]` com `page_id` e `fields[]`; cada
 posicionamento contém `signer_id`, `field_id` e `display_settings` com `left`,
 `top`, `width`, `height` e `fontSize`. As coordenadas usam os pixels da imagem da
 página em 150 DPI. O servidor recusa posicionamentos fora da página escolhida
 antes de criar o assignment. As prévias de página estão em
-`assinafy_download_document` (`action: "page"`).
+`assinafy_download_document_page`.
 
 #### Validar valores de campo
 
-Use `assinafy_check_fields` (`action: "list"`) e `assinafy_check_fields` (`action: "get"`) para inspecionar as definições
-e valide os valores propostos com `assinafy_check_fields` (`action: "validate"`):
+Use `assinafy_list_fields` e `assinafy_get_field` para inspecionar as definições
+e valide os valores propostos com `assinafy_validate_fields`:
 
 ```json
 {
-  "action": "validate",
   "values": [
     {
       "field_id": "ID_DO_CAMPO_NOME",
@@ -476,19 +469,19 @@ valor representa número ou data.
 
 ### 6. Gerar um documento a partir de um template
 
-Use `assinafy_find_templates` (`action: "list"`) e leia seus papéis, páginas e campos de editor.
-`assinafy_find_templates` (`action: "get"`) oferece a consulta direta onde o ambiente suporta essa
+Use `assinafy_list_templates` e leia seus papéis, páginas e campos de editor.
+`assinafy_get_template` oferece a consulta direta onde o ambiente suporta essa
 rota de compatibilidade. A resposta da listagem é a fonte documentada quando a
 rota individual não está disponível.
 
 Para um pedido como “preencha `customer_name` e `contract_total` no template de
 contrato de serviço”, resolva os nomes antes de criar qualquer coisa:
 
-1. Selecione o template pedido em `assinafy_find_templates` (`action: "list"`), seguindo a
+1. Selecione o template pedido em `assinafy_list_templates`, seguindo a
    paginação, e inspecione seu status de processamento, `roles` e
    `pages[].fields`.
 2. Relacione os nomes pedidos aos `label` dos posicionamentos ou às definições
-   devolvidas por `assinafy_check_fields` (`action: "list"`) / `assinafy_check_fields` (`action: "get"`). Ligue o `id` da
+   devolvidas por `assinafy_list_fields` / `assinafy_get_field`. Ligue o `id` da
    definição ao `field_id` do posicionamento e confira o `role_id` do
    posicionamento contra o papel de editor do template. Preencha apenas campos já
    configurados naquele template.
@@ -507,7 +500,7 @@ Criação de template e edição de layout e papéis são documentadas apenas na
 interna e não são expostas por este servidor. Configure o template salvo na
 Assinafy antes de usar o fluxo público de documento por template.
 
-`assinafy_request_signatures` (`action: "from_template"`) preenche todos os papéis. Cada entrada
+`assinafy_create_document_from_template` preenche todos os papéis. Cada entrada
 traz o `id` de um signatário existente **ou** `full_name` e `email`, que o
 servidor cria ou reutiliza — um ou outro, nunca os dois na mesma entrada, de modo
 que uma única chamada combina signatários do diretório e contatos novos. As
@@ -523,7 +516,7 @@ A chamada aceita nome personalizado, mensagem, expiração, `tags` (**nomes** de
 tag, mesclados com os padrões do template) e `editor_fields` com
 `{field_id,value}`. A criação pode enviar convites e consome a franquia de
 documentos do workspace; use o documento e os destinatários autorizados pelo usuário. Guarde o ID do
-documento retornado e chame `assinafy_find_documents` (`action: "get"`) para o assignment e as
+documento retornado e chame `assinafy_get_document` para o assignment e as
 conferências de status seguintes.
 
 Os argumentos de criação ficam assim (substitua pelos IDs descobertos no template
@@ -531,7 +524,6 @@ e no diretório de signatários):
 
 ```json
 {
-  "action": "from_template",
   "template_id": "TEMPLATE_ID",
   "name": "Contrato de serviço.pdf",
   "signers": [
@@ -565,12 +557,12 @@ usam os IDs do documento retornado, como em um PDF enviado.
 
 ### 7. Inspecionar prévias de página
 
-`assinafy_download_document` (`action: "page"`) recebe `document_id` e um `page_id` retornado.
+`assinafy_download_document_page` recebe `document_id` e um `page_id` retornado.
 Devolve os bytes da imagem em base64. Baixe apenas as páginas necessárias.
 
 ### 8. Baixar artefatos assinados e verificar
 
-Concluída a certificação, chame `assinafy_download_document` (`action: "artifact"`) com o ID do
+Concluída a certificação, chame `assinafy_download_document` com o ID do
 documento e `artifact: "certificated"`. O resultado traz `document_id`, o nome do
 artefato e `base64`. Decodifique e salve os bytes pelas ferramentas de arquivo do
 cliente; não imprima um base64 grande na conversa.
@@ -600,7 +592,7 @@ continuar:
 - Um assignment existente indica que a solicitação de assinatura pode já ter dado
   certo. Continue acompanhando; não crie outro assignment nem reenvie às cegas.
 - Um documento preparado sem assignment continua por
-  `assinafy_request_signatures` (`action: "from_document"`) com os IDs de signatário confirmados. Não precisa
+  `assinafy_create_assignment` com os IDs de signatário confirmados. Não precisa
   de novo upload. Confira o status de processamento antes de posicionar campos.
 - Se pedirem limpeza, use `assinafy_delete_document` apenas quando o estado atual
   do documento permitir. Essa ação precisa de autorização do usuário.
