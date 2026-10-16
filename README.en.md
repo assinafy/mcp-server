@@ -364,6 +364,8 @@ The address is fictional. Supply only recipients authorized for the actual task.
 The tool uploads the PDF, waits for processing, creates or reuses email contacts,
 and starts an Email-verified assignment with Email invitations. Save
 `document.id`, `assignment.id`, and `signer_ids` from the result.
+One call accepts at most 10 signers and has an end-to-end deadline of
+`max_wait_secs` plus two minutes.
 
 For preparation before sending, use this sequence:
 
@@ -491,12 +493,14 @@ an existing signer `id` or a `full_name` and `email` that the server creates or
 reuses — one or the other, never both in the same entry, so a template can mix
 directory signers and new contacts in a single call. Entries also take the
 documented `verification_method`, `notification_methods`, and `step`. An entry
-resolved from an email defaults to Email verification and notification; naming a
-notification method instead lets Assinafy infer the matching verification method.
+resolved from an email defaults to Email verification and notification. WhatsApp
+notification or verification, certificates, and biometrics require a signer `id`;
+prepare the authorized contact first.
 Template entries accept at most one notification channel: `Email` or `Whatsapp`.
-The server validates every entry before creating contacts. Role eligibility and
-signing order are still checked by Assinafy, so a later failure can leave newly
-created contacts behind.
+The server validates every entry and the complete signing order before creating
+contacts. When one entry has a step, all do; steps are contiguous from 1, and a
+certificate signer is alone in its step. Role eligibility is still checked by
+Assinafy, so a later failure can leave newly created contacts behind.
 
 The call accepts a custom name, message, expiration, `tags` (tag **names**, merged
 with the template defaults), and `editor_fields` containing `{field_id,value}`.
@@ -556,6 +560,7 @@ The tool also accepts `original`, `certificated`,
 `certificate-page`, `pades`, or `bundle`. Artifact availability depends on the
 lifecycle and signing method; an unavailable artifact is not a successful download.
 Binary responses are limited to 64 MiB before base64 encoding.
+Their base64 is returned only in structured tool results, with a short text summary.
 
 Call `assinafy_verify_document` with the signed document's Assinafy SHA-1 signature
 hash. Use the actual verification hash supplied with the signed document, not the

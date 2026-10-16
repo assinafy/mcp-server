@@ -54,8 +54,10 @@ check every input schema against the advertised catalog and validate examples.
 The examples use synthetic contacts and an actual synthetic PDF fixture.
 
 MCP calls use `tools/call` with `{name,arguments}`. Successful JSON results carry
-the same JSON in text and `structuredContent`. REST response envelopes are
-unwrapped. Lists retain `{data,meta?}`. Document deletion returns text. Failures
+the same JSON in text and `structuredContent`, except binary downloads: their
+base64 is only in `structuredContent`, with a short text summary, so a 64 MiB
+artifact is not also copied into text content. REST response envelopes are unwrapped.
+Lists retain `{data,meta?}`. Document deletion returns text. Failures
 use `isError: true`, preserving API status/message and any authentication
 challenge. Optional response fields depend on resource state and permissions.
 
@@ -244,13 +246,16 @@ Input:
 | `account_id` | no | Authorized workspace ID; discovered automatically in OAuth mode |
 
 An entry resolved from an email defaults to Email verification and notification;
-supplying `notification_methods` alone leaves the matching verification method to
-Assinafy. Returns the created document. A single email may fill multiple different
-roles; signer lookup prevents duplicate account signers.
+WhatsApp notification or verification, certificate signing, and biometric signing
+require an existing signer `id` whose contact data was prepared first. Returns the
+created document. A single email may fill multiple different roles; signer lookup
+prevents duplicate account signers.
 
 Every entry is validated before contact creation, including notification channels.
-Assinafy still validates role eligibility and signing order. Template creation is
-not transactional: a later upstream failure can leave newly created contacts.
+If one entry sets `step`, all entries must; steps are contiguous from 1, and a
+DigitalCertificate signer must be alone in its step. Assinafy still validates role
+eligibility. Template creation is not transactional: a later upstream failure can
+leave newly created contacts.
 
 Discover roles and placements with `assinafy_list_templates`. Match configurable
 field names or placement labels using `assinafy_list_fields`; ambiguous matches
@@ -328,7 +333,8 @@ There is no automatic field-name resolver; match IDs using discovered metadata.
 
 Download signed artifacts only after certification and availability are confirmed.
 Binary responses are capped at 64 MiB before base64 encoding. Download only the
-bytes needed; use the client's file tools to save them without printing base64.
+bytes needed; base64 appears only in `structuredContent`, with a short text summary.
+Use the client's file tools to save it without printing base64.
 
 ## Delete or verify
 

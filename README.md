@@ -374,6 +374,8 @@ O endereço é fictício. Informe apenas destinatários autorizados para a taref
 real. A ferramenta envia o PDF, aguarda o processamento, cria ou reutiliza
 contatos de e-mail e inicia um assignment com verificação e convite por Email.
 Guarde `document.id`, `assignment.id` e `signer_ids` do resultado.
+Uma chamada aceita no máximo 10 signatários e tem prazo total de `max_wait_secs`
+mais dois minutos.
 
 Para preparar antes de enviar, use esta sequência:
 
@@ -514,11 +516,13 @@ servidor cria ou reutiliza — um ou outro, nunca os dois na mesma entrada, de m
 que uma única chamada combina signatários do diretório e contatos novos. As
 entradas também aceitam `verification_method`, `notification_methods` e `step`
 conforme documentado. Uma entrada resolvida por email usa verificação e
-notificação por Email; informar só o método de notificação deixa a Assinafy
-inferir a verificação correspondente. Cada entrada de template aceita no máximo
-um canal: `Email` ou `Whatsapp`. O servidor valida todas as entradas antes de criar
-contatos. A Assinafy ainda valida os papéis e a ordem de assinatura, então uma falha
-posterior pode deixar contatos recém-criados.
+notificação por Email. Notificação ou verificação por WhatsApp, certificado ou
+biometria exigem um `id` de signatário; prepare antes o contato autorizado. Cada
+entrada de template aceita no máximo um canal: `Email` ou `Whatsapp`. O servidor
+valida todas as entradas e a ordem completa antes de criar contatos. Se uma entrada
+usar `step`, todas usam; as etapas são contíguas desde 1 e quem assina com certificado
+fica sozinho na etapa. A Assinafy ainda valida os papéis, então uma falha posterior
+pode deixar contatos recém-criados.
 
 A chamada aceita nome personalizado, mensagem, expiração, `tags` (**nomes** de
 tag, mesclados com os padrões do template) e `editor_fields` com
@@ -579,6 +583,7 @@ A ferramenta também aceita `original`, `certificated`, `certificate-page`,
 `pades` e `bundle`. A disponibilidade do artefato depende do ciclo de vida e do
 método de assinatura; um artefato indisponível não é um download bem-sucedido. As
 respostas binárias são limitadas a 64 MiB antes da codificação base64.
+O base64 é retornado apenas no resultado estruturado, com um resumo curto em texto.
 
 Chame `assinafy_verify_document` com o hash SHA-1 de assinatura do documento
 assinado. Use o hash de verificação real fornecido com o documento, não o ID do
