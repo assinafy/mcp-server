@@ -271,6 +271,7 @@ Assinafy. O ciclo de vida documentado é:
 | `uploading`, `uploaded`, `metadata_processing` | O processamento não terminou. Verifique depois; assignments `collect` precisam dos metadados de página prontos. |
 | `metadata_ready` | Inspecione ou renomeie o PDF e prepare a solicitação de assinatura. |
 | `pending_signature` | Inspecione signatários pendentes, ordem de assinatura, histórico de entrega e expiração. |
+| `pending_identity_review` | Todas as assinaturas terminaram; conclua a revisão manual de identidade na Assinafy antes da certificação. |
 | `certificating` | Todas as assinaturas podem estar presentes enquanto os artefatos finais ainda são gerados. |
 | `certificated` | Baixe os artefatos assinados disponíveis. Este estado não é excluível pela API documentada. |
 | `expired` | Inspecione o assignment e decida se atualiza a expiração. A Assinafy valida se a atualização é permitida. |
@@ -341,8 +342,9 @@ o formato. Leia o assignment atualizado para confirmar a data resultante. Não
 suponha que atualizar a expiração também enviou um novo convite.
 
 Encontre contatos por `assinafy_list_signers` ou `assinafy_get_signer`.
-`assinafy_update_signer` aceita `full_name`, `email` e `whatsapp_phone_number`.
-Um contato é compartilhado dentro do workspace, então revise a alteração
+`assinafy_update_signer` aceita `full_name`, `email`, `whatsapp_phone_number`
+e `government_id`. Salve CPF/CNPJ somente com autorização para verificação por
+certificado ou biometria. Um contato é compartilhado dentro do workspace, então revise a alteração
 pretendida antes de aplicá-la. A Assinafy bloqueia mudanças em um canal
 já verificado em um documento em andamento. Alterar um canal não verificado
 invalida links e códigos antigos; depois de uma correção bem-sucedida, use um
@@ -414,16 +416,22 @@ Exemplo de argumentos de `assinafy_create_assignment`:
 
 A ferramenta de assignment aceita `virtual` e `collect`, `copy_receivers`
 opcionais (IDs de signatário), `message`, `expires_at` e ordem de assinatura por
-`step`. Os métodos de verificação são `Email`, `Whatsapp` e
-`DigitalCertificate`; as notificações usam os canais Email/WhatsApp
-documentados. WhatsApp exige o contato e a assinatura de plano adequados;
-assinatura com certificado exige o recurso habilitado na conta e o CPF/CNPJ do
-signatário já cadastrado no contato na Assinafy; este servidor nunca o coleta.
-A Assinafy valida esses requisitos. Nenhuma resposta traz custo ou saldo: criar um documento e enviar uma notificação por WhatsApp
-consomem a franquia de documentos e os créditos de notificação da workspace pelas
-taxas publicadas, e o saldo restante se consulta no Assinafy, não por este
-servidor. Reutilize a autorização do usuário para a ação pedida; pergunte apenas
-por escolhas de documento ou destinatário que ainda faltam. Não repita uma chamada
+`step`. Os métodos de verificação são `Email`, `Whatsapp`,
+`DigitalCertificate` e `IdDocumentFaceMatchBasic`; cada signatário usa exatamente
+um canal de notificação Email/WhatsApp compatível. WhatsApp exige o contato e o
+plano adequados. Certificado e biometria exigem o recurso habilitado na conta e
+CPF/CNPJ salvo no contato por uma atualização autorizada de `government_id`.
+Biometria exige CPF válido. A Assinafy valida a elegibilidade e os recursos
+atuais no envio.
+
+Use `estimate_only: true` nas ferramentas de assinatura para consultar custos e
+saldos antes do envio. A prévia de um PDF novo envia e preserva o documento;
+reutilize seu ID com `assinafy_create_assignment` para solicitar assinaturas.
+As outras prévias não criam registros nem enviam mensagens. Veja
+[prévias de custo](#prévias-de-custo-e-verificação-de-identidade) e os
+[payloads completos de requisição e resposta](docs/tool-payloads.json).
+Reutilize a autorização do usuário para a ação pedida; pergunte apenas pelas
+escolhas de documento ou destinatário que ainda faltam. Não repita uma chamada
 só porque o progresso parece parado.
 
 Na assinatura ordenada, se um signatário informar `step`, todos precisam
@@ -631,3 +639,28 @@ Se o login informar `invalid_target`, `invalid_client` ou falta de metadados do
 recurso, confira se a URL é exatamente `https://mcp.assinafy.com.br/mcp` e se o
 cliente está atualizado. Se persistir, contate o suporte da Assinafy com o nome
 e a versão do cliente e a mensagem de erro. Não inclua tokens ou credenciais.
+
+## Prévias de custo e verificação de identidade
+
+Use `estimate_only: true` nas ferramentas existentes de PDF, assignment, template
+e lembrete para consultar saldos e detalhamento de custos antes do envio. A
+prévia de PDF envia e preserva o documento; reutilize esse ID para solicitar
+assinaturas. As demais prévias não criam registros nem enviam mensagens.
+Estimativas não reservam créditos; a Assinafy verifica os recursos novamente no
+envio. Veja [o fluxo e os payloads](docs/tools.md#costs-within-the-signing-flow).
+
+A verificação biométrica usa `IdDocumentFaceMatchBasic` nas configurações de
+signatário do assignment ou template. Salve antes um CPF autorizado em
+`government_id` no contato. O signatário conclui as fotos de identificação e a
+prova de vida na Assinafy. A revisão manual ocorre lá pela conta responsável;
+as ferramentas de documento mostram `InReview` e `pending_identity_review`.
+Certificados ICP-Brasil A1/A3 usam `DigitalCertificate`; cada signatário com
+certificado fica sozinho na etapa de assinatura.
+
+Configure webhooks de conta na Assinafy, independentemente de MCP Events.
+Planos pagos aceitam até três endpoints. Salve o segredo retornado na criação
+com assinatura habilitada; aplicativos OAuth não podem recuperá-lo nem
+rotacioná-lo depois. O catálogo continua com exatamente 27 ferramentas, sem
+ferramentas separadas para custos, biometria ou administração de webhooks.
+Veja [verificação](docs/tools.md#biometric-and-certificate-verification) e
+[assinatura de webhooks](docs/tools.md#account-webhooks).

@@ -1,0 +1,5048 @@
+{
+  "source": "https://api.assinafy.com.br/v1/docs/openapi.json",
+  "description": "MCP arguments and structuredContent schemas. REST envelopes are unwrapped; lists retain data and optional pagination meta. Optional fields depend on resource state. Examples use synthetic contacts.",
+  "tools": [
+    {
+      "name": "assinafy_list_documents",
+      "description": "Search workspace documents by name or status, with pagination. Use it to find a document the user names before inspecting or following up on it.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List documents"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "page number (1-based)"
+          },
+          "per_page": {
+            "type": "integer",
+            "description": "number of results per page (max 100)"
+          },
+          "search": {
+            "type": "string",
+            "description": "partial match on document name or signer"
+          },
+          "sort": {
+            "type": "string",
+            "description": "name or updated_at; prefix with - for descending"
+          },
+          "status": {
+            "type": "string",
+            "description": "document status filter"
+          },
+          "method": {
+            "type": "string",
+            "description": "signature method filter: virtual or collect"
+          },
+          "tags": {
+            "type": "string",
+            "description": "comma-separated tag IDs; documents must have all listed tags"
+          },
+          "account_id": {
+            "type": "string",
+            "description": "account ID; uses request routing if omitted"
+          }
+        },
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Document"
+            }
+          },
+          "meta": {
+            "$ref": "#/$defs/PaginationMeta"
+          }
+        }
+      },
+      "requestExample": {
+        "page": 1,
+        "per_page": 1,
+        "search": "Example",
+        "sort": "-updated_at",
+        "status": "pending_signature",
+        "method": "virtual",
+        "tags": "Example",
+        "account_id": "example_account_id"
+      },
+      "responseExample": {
+        "data": [
+          {
+            "resource": "Example",
+            "id": "example_id",
+            "account_id": "example_account_id",
+            "template_id": "example_template_id",
+            "name": "Example",
+            "status": "certificated",
+            "artifacts": {
+              "original": "Example",
+              "thumbnail": "Example",
+              "certificated": "Example",
+              "certificate-page": "Example",
+              "pades": "Example",
+              "bundle": "Example"
+            },
+            "is_closed": true,
+            "signing_url": "Example",
+            "decline_reason": "Example",
+            "declined_by": {
+              "resource": "Example",
+              "id": "example_id",
+              "full_name": "Example Signer",
+              "email": "signer@example.invalid",
+              "whatsapp_phone_number": "+15005550006",
+              "government_id": "52998224725",
+              "has_accepted_terms": true
+            },
+            "tags": [
+              {
+                "id": "example_id",
+                "name": "Example"
+              }
+            ],
+            "assignment": {
+              "resource": "Example",
+              "id": "example_id",
+              "sender_email": "signer@example.invalid",
+              "method": "virtual",
+              "expires_at": "2030-01-01T00:00:00Z",
+              "message": "Example",
+              "signers": [
+                {
+                  "resource": "Example",
+                  "id": "example_id",
+                  "full_name": "Example Signer",
+                  "email": "signer@example.invalid",
+                  "whatsapp_phone_number": "+15005550006",
+                  "government_id": "52998224725",
+                  "has_accepted_terms": true,
+                  "verification_method": "Email",
+                  "notification_methods": [
+                    "Email"
+                  ],
+                  "step": 1,
+                  "notified": true,
+                  "identity_verification_status": "Pending",
+                  "completed": true,
+                  "notification_history": [
+                    {
+                      "event": "Example",
+                      "status": "sent",
+                      "error_code": "Example",
+                      "error_message": "Example",
+                      "sent_at": "2030-01-01T00:00:00Z",
+                      "failed_at": "2030-01-01T00:00:00Z"
+                    }
+                  ]
+                }
+              ],
+              "copy_receivers": [
+                {}
+              ],
+              "items": [
+                {
+                  "id": "example_id",
+                  "page": {
+                    "id": "example_id",
+                    "number": 1,
+                    "height": 1650,
+                    "width": 1275,
+                    "download_url": "Example"
+                  },
+                  "signer": {},
+                  "field": {},
+                  "display_settings": "Example",
+                  "value": "Example",
+                  "completed": true
+                }
+              ],
+              "summary": {
+                "signer_count": 1,
+                "completed_count": 1,
+                "signers": [
+                  {}
+                ]
+              },
+              "signing_urls": [
+                {
+                  "signer_id": "example_signer_id",
+                  "url": "https://example.invalid/webhooks/assinafy"
+                }
+              ]
+            },
+            "pages": [
+              {
+                "id": "example_id",
+                "number": 1,
+                "height": 1650,
+                "width": 1275,
+                "download_url": "Example"
+              }
+            ],
+            "created_at": "2030-01-01T00:00:00Z",
+            "updated_at": "2030-01-01T00:00:00Z",
+            "activities": [
+              {
+                "id": 1,
+                "event": "Example",
+                "message": "Example",
+                "payload": {},
+                "origin": {
+                  "ip": "Example",
+                  "user-agent": "Example"
+                },
+                "created_at": "2030-01-01T00:00:00Z"
+              }
+            ]
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "per_page": 1,
+          "total": 1
+        }
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/accounts/{accountId}/documents"
+      }
+    },
+    {
+      "name": "assinafy_get_document",
+      "description": "Inspect one known document: status, assignment, signers with their progress, pages and available artifacts. Read it before retrying a send or following up. 100% signed does not mean certification is finished; the signed PDF is ready at status certificated.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Get a document"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "unique document ID"
+          }
+        },
+        "required": [
+          "document_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Document"
+      },
+      "requestExample": {
+        "document_id": "example_document_id"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "account_id": "example_account_id",
+        "template_id": "example_template_id",
+        "name": "Example",
+        "status": "certificated",
+        "artifacts": {
+          "original": "Example",
+          "thumbnail": "Example",
+          "certificated": "Example",
+          "certificate-page": "Example",
+          "pades": "Example",
+          "bundle": "Example"
+        },
+        "is_closed": true,
+        "signing_url": "Example",
+        "decline_reason": "Example",
+        "declined_by": {
+          "resource": "Example",
+          "id": "example_id",
+          "full_name": "Example Signer",
+          "email": "signer@example.invalid",
+          "whatsapp_phone_number": "+15005550006",
+          "government_id": "52998224725",
+          "has_accepted_terms": true
+        },
+        "tags": [
+          {
+            "id": "example_id",
+            "name": "Example"
+          }
+        ],
+        "assignment": {
+          "resource": "Example",
+          "id": "example_id",
+          "sender_email": "signer@example.invalid",
+          "method": "virtual",
+          "expires_at": "2030-01-01T00:00:00Z",
+          "message": "Example",
+          "signers": [
+            {
+              "resource": "Example",
+              "id": "example_id",
+              "full_name": "Example Signer",
+              "email": "signer@example.invalid",
+              "whatsapp_phone_number": "+15005550006",
+              "government_id": "52998224725",
+              "has_accepted_terms": true,
+              "verification_method": "Email",
+              "notification_methods": [
+                "Email"
+              ],
+              "step": 1,
+              "notified": true,
+              "identity_verification_status": "Pending",
+              "completed": true,
+              "notification_history": [
+                {
+                  "event": "Example",
+                  "status": "sent",
+                  "error_code": "Example",
+                  "error_message": "Example",
+                  "sent_at": "2030-01-01T00:00:00Z",
+                  "failed_at": "2030-01-01T00:00:00Z"
+                }
+              ]
+            }
+          ],
+          "copy_receivers": [
+            {}
+          ],
+          "items": [
+            {
+              "id": "example_id",
+              "page": {
+                "id": "example_id",
+                "number": 1,
+                "height": 1650,
+                "width": 1275,
+                "download_url": "Example"
+              },
+              "signer": {},
+              "field": {},
+              "display_settings": "Example",
+              "value": "Example",
+              "completed": true
+            }
+          ],
+          "summary": {
+            "signer_count": 1,
+            "completed_count": 1,
+            "signers": [
+              {}
+            ]
+          },
+          "signing_urls": [
+            {
+              "signer_id": "example_signer_id",
+              "url": "https://example.invalid/webhooks/assinafy"
+            }
+          ]
+        },
+        "pages": [
+          {
+            "id": "example_id",
+            "number": 1,
+            "height": 1650,
+            "width": 1275,
+            "download_url": "Example"
+          }
+        ],
+        "created_at": "2030-01-01T00:00:00Z",
+        "updated_at": "2030-01-01T00:00:00Z",
+        "activities": [
+          {
+            "id": 1,
+            "event": "Example",
+            "message": "Example",
+            "payload": {},
+            "origin": {
+              "ip": "Example",
+              "user-agent": "Example"
+            },
+            "created_at": "2030-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/documents/{documentId}"
+      }
+    },
+    {
+      "name": "assinafy_list_document_activities",
+      "description": "List the activities recorded for a document. Each entry carries an event-specific `payload` snapshot (keys vary per event) and the request `origin` (`ip`, `user-agent`). Use it to explain what happened to a document and when.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List document activities"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "Document ID.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "document_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/DocumentActivity"
+            }
+          },
+          "meta": {
+            "$ref": "#/$defs/PaginationMeta"
+          }
+        }
+      },
+      "requestExample": {
+        "document_id": "example_document_id"
+      },
+      "responseExample": {
+        "data": [
+          {
+            "id": 1,
+            "event": "Example",
+            "message": "Example",
+            "payload": {},
+            "origin": {
+              "ip": "Example",
+              "user-agent": "Example"
+            },
+            "created_at": "2030-01-01T00:00:00Z"
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "per_page": 1,
+          "total": 1
+        }
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/documents/{documentId}/activities"
+      }
+    },
+    {
+      "name": "assinafy_list_whatsapp_notifications",
+      "description": "List all WhatsApp notification messages sent for an assignment. The response includes the rendered template text split into `header`, `body` and `buttons` — exactly what the signer would see. In sandbox/stage, WhatsApp messages are simulated (no real delivery) and button URLs include access/verification codes you can use to simulate the signing flow. Treat returned signing links and verification codes as sensitive; never use them to sign for another person. Use it to troubleshoot WhatsApp delivery for one assignment.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List WhatsApp notifications"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "assignment_id": {
+            "type": "string",
+            "description": "The assignment ID.",
+            "minLength": 1
+          },
+          "document_id": {
+            "type": "string",
+            "description": "Document ID.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "document_id",
+          "assignment_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/WhatsappNotification"
+            }
+          },
+          "meta": {
+            "$ref": "#/$defs/PaginationMeta"
+          }
+        }
+      },
+      "requestExample": {
+        "assignment_id": "example_assignment_id",
+        "document_id": "example_document_id"
+      },
+      "responseExample": {
+        "data": [
+          {
+            "sent_at": 1,
+            "header": "Example",
+            "body": "Example",
+            "buttons": [
+              {
+                "text": "Example"
+              }
+            ],
+            "phone_number": "Example",
+            "signer_id": "example_signer_id"
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "per_page": 1,
+          "total": 1
+        }
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/documents/{documentId}/assignments/{assignmentId}/whatsapp-notifications"
+      }
+    },
+    {
+      "name": "assinafy_upload_document",
+      "description": "Upload a PDF without sending invitations and return its document ID. Use it when the user wants to prepare a document now and send it later with assinafy_create_assignment. Never upload again when a document ID is already known.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Upload a document"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "description": "PDF filename including .pdf"
+          },
+          "file_base64": {
+            "type": "string",
+            "description": "base64 PDF bytes, at most 25 MiB decoded"
+          },
+          "account_id": {
+            "type": "string",
+            "description": "authorized workspace; discovered through OAuth when omitted"
+          }
+        },
+        "required": [
+          "file_name",
+          "file_base64"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Document"
+      },
+      "requestExample": {
+        "file_name": "contract.pdf",
+        "file_base64": "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiAvQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCA1NiA+PgpzdHJlYW0KQlQgL0YxIDI0IFRmIDcyIDcwMCBUZCAoQXNzaW5hZnkgTUNQIGF1ZGl0IHNhbXBsZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzNDcgMDAwMDAgbiAKdHJhaWxlcgo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+CnN0YXJ0eHJlZgo0MTcKJSVFT0Y=",
+        "account_id": "example_account_id"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "account_id": "example_account_id",
+        "template_id": "example_template_id",
+        "name": "Example",
+        "status": "uploaded",
+        "artifacts": {
+          "original": "https://example.invalid/documents/example/download/original"
+        },
+        "is_closed": false,
+        "decline_reason": "Example",
+        "declined_by": {
+          "resource": "Example",
+          "id": "example_id",
+          "full_name": "Example Signer",
+          "email": "signer@example.invalid",
+          "whatsapp_phone_number": "+15005550006",
+          "government_id": "52998224725",
+          "has_accepted_terms": true
+        },
+        "tags": [
+          {
+            "id": "example_id",
+            "name": "Example"
+          }
+        ],
+        "assignment": null,
+        "pages": [],
+        "created_at": "2030-01-01T00:00:00Z",
+        "updated_at": "2030-01-01T00:00:00Z",
+        "activities": [
+          {
+            "id": 1,
+            "event": "Example",
+            "message": "Example",
+            "payload": {},
+            "origin": {
+              "ip": "Example",
+              "user-agent": "Example"
+            },
+            "created_at": "2030-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "api": {
+        "method": "POST",
+        "path": "/v1/accounts/{accountId}/documents"
+      }
+    },
+    {
+      "name": "assinafy_rename_document",
+      "description": "Update a document's name. Only allowed before any assignment is created (i.e. while the document is in `uploaded` or `metadata_ready` status and has no signers yet); once the signature process has started or the document is certificated, the name is locked. The name is normalized: diacritics are removed and unsupported characters are replaced with dashes.",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Rename document"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "Document ID.",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "name",
+          "document_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Document"
+      },
+      "requestExample": {
+        "document_id": "example_document_id",
+        "name": "Example"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "account_id": "example_account_id",
+        "template_id": "example_template_id",
+        "name": "Example",
+        "status": "pending_signature",
+        "artifacts": {
+          "original": "Example",
+          "thumbnail": "Example",
+          "certificated": "Example",
+          "certificate-page": "Example",
+          "pades": "Example",
+          "bundle": "Example"
+        },
+        "is_closed": true,
+        "signing_url": "Example",
+        "decline_reason": "Example",
+        "declined_by": {
+          "resource": "Example",
+          "id": "example_id",
+          "full_name": "Example Signer",
+          "email": "signer@example.invalid",
+          "whatsapp_phone_number": "+15005550006",
+          "government_id": "52998224725",
+          "has_accepted_terms": true
+        },
+        "tags": [
+          {
+            "id": "example_id",
+            "name": "Example"
+          }
+        ],
+        "assignment": {
+          "resource": "Example",
+          "id": "example_id",
+          "sender_email": "signer@example.invalid",
+          "method": "virtual",
+          "expires_at": "2030-01-01T00:00:00Z",
+          "message": "Example",
+          "signers": [
+            {
+              "resource": "Example",
+              "id": "example_id",
+              "full_name": "Example Signer",
+              "email": "signer@example.invalid",
+              "whatsapp_phone_number": "+15005550006",
+              "government_id": "52998224725",
+              "has_accepted_terms": true,
+              "verification_method": "Email",
+              "notification_methods": [
+                "Email"
+              ],
+              "step": 1,
+              "notified": true,
+              "identity_verification_status": "Pending",
+              "completed": true,
+              "notification_history": [
+                {
+                  "event": "Example",
+                  "status": "sent",
+                  "error_code": "Example",
+                  "error_message": "Example",
+                  "sent_at": "2030-01-01T00:00:00Z",
+                  "failed_at": "2030-01-01T00:00:00Z"
+                }
+              ]
+            }
+          ],
+          "copy_receivers": [
+            {}
+          ],
+          "items": [
+            {
+              "id": "example_id",
+              "page": {
+                "id": "example_id",
+                "number": 1,
+                "height": 1650,
+                "width": 1275,
+                "download_url": "Example"
+              },
+              "signer": {},
+              "field": {},
+              "display_settings": "Example",
+              "value": "Example",
+              "completed": true
+            }
+          ],
+          "summary": {
+            "signer_count": 1,
+            "completed_count": 1,
+            "signers": [
+              {}
+            ]
+          },
+          "signing_urls": [
+            {
+              "signer_id": "example_signer_id",
+              "url": "https://example.invalid/webhooks/assinafy"
+            }
+          ]
+        },
+        "pages": [
+          {
+            "id": "example_id",
+            "number": 1,
+            "height": 1650,
+            "width": 1275,
+            "download_url": "Example"
+          }
+        ],
+        "created_at": "2030-01-01T00:00:00Z",
+        "updated_at": "2030-01-01T00:00:00Z",
+        "activities": [
+          {
+            "id": 1,
+            "event": "Example",
+            "message": "Example",
+            "payload": {},
+            "origin": {
+              "ip": "Example",
+              "user-agent": "Example"
+            },
+            "created_at": "2030-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "api": {
+        "method": "PATCH",
+        "path": "/v1/documents/{documentId}"
+      }
+    },
+    {
+      "name": "assinafy_send_pdf_for_signature",
+      "description": "Upload a new PDF, wait for processing and invite signers by full name and email, using Email verification and notification. This sends invitations and uses plan allowance: use only recipients the user authorized. After a partial failure, inspect the retained document ID and continue with assinafy_create_assignment instead of uploading again.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Send a PDF for signature"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "account ID; uses the request or server default if omitted"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "PDF filename including the .pdf extension"
+          },
+          "file_base64": {
+            "type": "string",
+            "description": "base64-encoded PDF bytes (max 25 MB decoded)"
+          },
+          "signers": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "full_name": {
+                  "type": "string",
+                  "description": "signer's full name"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "signer's email address; existing exact matches are reused"
+                }
+              },
+              "required": [
+                "full_name",
+                "email"
+              ],
+              "additionalProperties": false
+            },
+            "description": "one or more signers to create or reuse and request signatures from"
+          },
+          "message": {
+            "type": "string",
+            "description": "invitation message shown to signers"
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "assignment expiry timestamp in RFC 3339 format"
+          },
+          "max_wait_secs": {
+            "type": "integer",
+            "description": "maximum seconds to wait for PDF processing (default 30; max 600)"
+          },
+          "poll_secs": {
+            "type": "integer",
+            "description": "polling interval in seconds (default 2; cannot exceed max_wait_secs)"
+          },
+          "estimate_only": {
+            "type": "boolean",
+            "description": "upload and prepare the PDF, then return cost and document ID without creating contacts or sending invitations; reuse that ID to send"
+          }
+        },
+        "required": [
+          "file_name",
+          "file_base64",
+          "signers"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "document": {
+                "$ref": "#/$defs/Document"
+              },
+              "assignment": {
+                "$ref": "#/$defs/Assignment"
+              },
+              "signer_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "not": {
+              "required": [
+                "cost_estimate"
+              ]
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "cost_estimate": {
+                "$ref": "#/$defs/CostEstimate"
+              },
+              "document": {
+                "$ref": "#/$defs/Document"
+              }
+            },
+            "required": [
+              "cost_estimate"
+            ]
+          }
+        ]
+      },
+      "requestExample": {
+        "account_id": "example_account_id",
+        "file_name": "contract.pdf",
+        "file_base64": "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiAvQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCA1NiA+PgpzdHJlYW0KQlQgL0YxIDI0IFRmIDcyIDcwMCBUZCAoQXNzaW5hZnkgTUNQIGF1ZGl0IHNhbXBsZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzNDcgMDAwMDAgbiAKdHJhaWxlcgo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+CnN0YXJ0eHJlZgo0MTcKJSVFT0Y=",
+        "signers": [
+          {
+            "full_name": "Example Signer",
+            "email": "signer@example.invalid"
+          }
+        ],
+        "message": "Example",
+        "expires_at": "2030-01-02T00:00:00Z",
+        "max_wait_secs": 1,
+        "poll_secs": 1,
+        "estimate_only": false
+      },
+      "responseExample": {
+        "document": {
+          "resource": "Example",
+          "id": "example_id",
+          "account_id": "example_account_id",
+          "template_id": "example_template_id",
+          "name": "Example",
+          "status": "uploaded",
+          "artifacts": {
+            "original": "https://example.invalid/documents/example/download/original"
+          },
+          "is_closed": false,
+          "decline_reason": "Example",
+          "declined_by": {
+            "resource": "Example",
+            "id": "example_id",
+            "full_name": "Example Signer",
+            "email": "signer@example.invalid",
+            "whatsapp_phone_number": "+15005550006",
+            "government_id": "52998224725",
+            "has_accepted_terms": true
+          },
+          "tags": [
+            {
+              "id": "example_id",
+              "name": "Example"
+            }
+          ],
+          "assignment": null,
+          "pages": [],
+          "created_at": "2030-01-01T00:00:00Z",
+          "updated_at": "2030-01-01T00:00:00Z",
+          "activities": [
+            {
+              "id": 1,
+              "event": "Example",
+              "message": "Example",
+              "payload": {},
+              "origin": {
+                "ip": "Example",
+                "user-agent": "Example"
+              },
+              "created_at": "2030-01-01T00:00:00Z"
+            }
+          ]
+        },
+        "assignment": {
+          "resource": "Example",
+          "id": "example_id",
+          "sender_email": "signer@example.invalid",
+          "method": "virtual",
+          "expires_at": "2030-01-01T00:00:00Z",
+          "message": "Example",
+          "signers": [
+            {
+              "resource": "Example",
+              "id": "example_id",
+              "full_name": "Example Signer",
+              "email": "signer@example.invalid",
+              "whatsapp_phone_number": "+15005550006",
+              "government_id": "52998224725",
+              "has_accepted_terms": true,
+              "verification_method": "Email",
+              "notification_methods": [
+                "Email"
+              ],
+              "step": 1,
+              "notified": true,
+              "identity_verification_status": "Pending",
+              "completed": true,
+              "notification_history": [
+                {
+                  "event": "Example",
+                  "status": "sent",
+                  "error_code": "Example",
+                  "error_message": "Example",
+                  "sent_at": "2030-01-01T00:00:00Z",
+                  "failed_at": "2030-01-01T00:00:00Z"
+                }
+              ]
+            }
+          ],
+          "copy_receivers": [
+            {}
+          ],
+          "items": [
+            {
+              "id": "example_id",
+              "page": {
+                "id": "example_id",
+                "number": 1,
+                "height": 1650,
+                "width": 1275,
+                "download_url": "Example"
+              },
+              "signer": {},
+              "field": {},
+              "display_settings": "Example",
+              "value": "Example",
+              "completed": true
+            }
+          ],
+          "summary": {
+            "signer_count": 1,
+            "completed_count": 1,
+            "signers": [
+              {}
+            ]
+          },
+          "signing_urls": [
+            {
+              "signer_id": "example_signer_id",
+              "url": "https://example.invalid/webhooks/assinafy"
+            }
+          ]
+        },
+        "signer_ids": [
+          "Example"
+        ]
+      },
+      "api": {
+        "workflow": true
+      },
+      "estimateRequestExample": {
+        "account_id": "example_account_id",
+        "file_name": "contract.pdf",
+        "file_base64": "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiAvQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCA1NiA+PgpzdHJlYW0KQlQgL0YxIDI0IFRmIDcyIDcwMCBUZCAoQXNzaW5hZnkgTUNQIGF1ZGl0IHNhbXBsZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzNDcgMDAwMDAgbiAKdHJhaWxlcgo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+CnN0YXJ0eHJlZgo0MTcKJSVFT0Y=",
+        "signers": [
+          {
+            "full_name": "Example Signer",
+            "email": "signer@example.invalid"
+          }
+        ],
+        "message": "Example",
+        "expires_at": "2030-01-02T00:00:00Z",
+        "max_wait_secs": 1,
+        "poll_secs": 1,
+        "estimate_only": true
+      },
+      "estimateResponseExample": {
+        "cost_estimate": {
+          "documents": 1,
+          "credits": 0,
+          "needs_extra_document": false,
+          "extra_document_cost": 0,
+          "total_credits": 0,
+          "breakdown": [
+            {
+              "code": "NotificationEmail",
+              "name": "Email Notification",
+              "cost": 0,
+              "quantity": 1,
+              "unit_cost": 0
+            }
+          ],
+          "document_balance": 10,
+          "credit_balance": 20,
+          "has_sufficient_resources": true,
+          "blocking_reason": null,
+          "message": null
+        },
+        "document": {
+          "resource": "Example",
+          "id": "example_id",
+          "account_id": "example_account_id",
+          "template_id": "example_template_id",
+          "name": "Example",
+          "status": "uploaded",
+          "artifacts": {
+            "original": "https://example.invalid/documents/example/download/original"
+          },
+          "is_closed": false,
+          "decline_reason": "Example",
+          "declined_by": {
+            "resource": "Example",
+            "id": "example_id",
+            "full_name": "Example Signer",
+            "email": "signer@example.invalid",
+            "whatsapp_phone_number": "+15005550006",
+            "government_id": "52998224725",
+            "has_accepted_terms": true
+          },
+          "tags": [
+            {
+              "id": "example_id",
+              "name": "Example"
+            }
+          ],
+          "assignment": null,
+          "pages": [],
+          "created_at": "2030-01-01T00:00:00Z",
+          "updated_at": "2030-01-01T00:00:00Z",
+          "activities": [
+            {
+              "id": 1,
+              "event": "Example",
+              "message": "Example",
+              "payload": {},
+              "origin": {
+                "ip": "Example",
+                "user-agent": "Example"
+              },
+              "created_at": "2030-01-01T00:00:00Z"
+            }
+          ]
+        }
+      },
+      "estimateApi": {
+        "method": "POST",
+        "path": "/v1/documents/{documentId}/assignments/estimate-cost"
+      }
+    },
+    {
+      "name": "assinafy_create_assignment",
+      "description": "Request signatures on a document. Use `method: virtual` to sign without input fields, or `method: collect` to place input fields on specific pages.\n\nFor **virtual**, the document may be in `uploaded`, `metadata_processing` or `metadata_ready`; it is promoted to `pending_signature` automatically once metadata processing completes. For **collect**, the document must be in `metadata_ready` (fields reference specific pages).\n\n`step` controls signing order: signers sharing a step sign in parallel, and the next step is notified only after the previous step completes. If supplied, every signer must supply it and values must be contiguous starting at 1. Obtain signer IDs from assinafy_list_signers or assinafy_create_signer and page IDs from assinafy_get_document. This sends signing invitations. Check with assinafy_get_document that no assignment exists first; this can consume credits.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Create assignment (request signatures)"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "copy_receivers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Signer IDs that only receive a copy."
+          },
+          "document_id": {
+            "type": "string",
+            "description": "Document ID.",
+            "minLength": 1
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "display_settings": {
+                        "type": "object",
+                        "properties": {
+                          "backgroundColor": {
+                            "type": "string",
+                            "description": "CSS-compatible background-color presentation metadata."
+                          },
+                          "fontFamily": {
+                            "type": "string",
+                            "description": "Font-family presentation metadata."
+                          },
+                          "fontSize": {
+                            "type": "number",
+                            "description": "Font size in the 150-DPI page-image coordinate system.",
+                            "exclusiveMinimum": 0,
+                            "format": "float"
+                          },
+                          "height": {
+                            "type": "number",
+                            "description": "Height of the placement rectangle, in page-image pixels.",
+                            "exclusiveMinimum": 0,
+                            "format": "float"
+                          },
+                          "left": {
+                            "type": "number",
+                            "description": "Horizontal distance from the page's left edge, in page-image pixels.",
+                            "minimum": 0,
+                            "format": "float"
+                          },
+                          "top": {
+                            "type": "number",
+                            "description": "Vertical distance from the page's top edge, in page-image pixels.",
+                            "minimum": 0,
+                            "format": "float"
+                          },
+                          "width": {
+                            "type": "number",
+                            "description": "Width of the placement rectangle, in page-image pixels.",
+                            "exclusiveMinimum": 0,
+                            "format": "float"
+                          }
+                        },
+                        "description": "A field placement rectangle on a document page. Geometry values are pixels in Assinafy's 150-DPI page image, measured from the upper-left corner. Clients must keep the rectangle within the selected page's width and height; the API does not clamp out-of-bounds values.",
+                        "required": [
+                          "left",
+                          "top",
+                          "width",
+                          "height",
+                          "fontSize"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "field_id": {
+                        "type": "string"
+                      },
+                      "signer_id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "signer_id",
+                      "field_id",
+                      "display_settings"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1
+                },
+                "page_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "page_id",
+                "fields"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Required for `collect`: field placements per page."
+          },
+          "estimate_only": {
+            "type": "boolean",
+            "description": "Preview cost and balances without creating an assignment or notifying anyone."
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "ISO 8601; default is no expiration. Must be at least one hour in the future.",
+            "format": "date-time"
+          },
+          "message": {
+            "type": "string",
+            "description": "Text included in the invitation email."
+          },
+          "method": {
+            "type": "string",
+            "default": "virtual",
+            "enum": [
+              "virtual",
+              "collect"
+            ]
+          },
+          "signers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "notification_methods": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "Email",
+                      "Whatsapp"
+                    ]
+                  },
+                  "description": "How the signer is told a signature is being requested. **Exactly one method per signer** — the array shape is historical, and sending two returns `400`. The method must also be compatible with `verification_method`: `Email` verification takes `Email`, `Whatsapp` verification takes `Whatsapp`, and `DigitalCertificate` and `IdDocumentFaceMatchBasic` take either. WhatsApp incurs an additional cost and is available only on paid subscriptions. Omit it to have it inferred from `verification_method`, or `{\"Email\"}` when neither is sent. See **Verification & Notification Methods** for the full pairing table.",
+                  "maxItems": 1,
+                  "example": [
+                    "Email"
+                  ]
+                },
+                "step": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "verification_method": {
+                  "type": "string",
+                  "description": "How the signer's identity is verified before signing. `Email` (default) sends a one-time code to the signer's email; `Whatsapp` sends the code over WhatsApp — the verification itself is not billed, but it requires the WhatsApp notification channel, so the signer costs 0.45 credits (available only on paid subscriptions); `DigitalCertificate` has the signer sign with their own ICP-Brasil certificate (A1/A3) — it requires the Digital Certificate feature, the signer must have a CPF or CNPJ in `government_id`, must be alone in its signing step, and is charged 0.5 credits per signer. A CPF requires that person's certificate (an e-CPF, or an e-CNPJ naming them as legal representative); a CNPJ requires an e-CNPJ for that company, from any of its representatives. `IdDocumentFaceMatchBasic` verifies the signer from a photo of their government ID, a photo of them holding it and a liveness check — it requires the ID Document + Face Match feature, the signer must have a valid CPF in `government_id`, and is charged a per-signer fee. Omit to default to `Email`.",
+                  "enum": [
+                    "Email",
+                    "Whatsapp",
+                    "DigitalCertificate",
+                    "IdDocumentFaceMatchBasic"
+                  ],
+                  "example": "Email"
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "method",
+          "signers",
+          "document_id"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "method": {
+                  "const": "collect"
+                }
+              },
+              "required": [
+                "method"
+              ]
+            },
+            "then": {
+              "properties": {
+                "entries": {
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "estimate_only": {
+                  "const": true
+                }
+              },
+              "required": [
+                "estimate_only"
+              ]
+            },
+            "else": {
+              "properties": {
+                "signers": {
+                  "items": {
+                    "required": [
+                      "id"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "structuredContentSchema": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Assignment",
+            "not": {
+              "required": [
+                "cost_estimate"
+              ]
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "cost_estimate": {
+                "$ref": "#/$defs/CostEstimate"
+              }
+            },
+            "required": [
+              "cost_estimate"
+            ]
+          }
+        ]
+      },
+      "requestExample": {
+        "copy_receivers": [
+          "Example"
+        ],
+        "document_id": "example_document_id",
+        "estimate_only": false,
+        "expires_at": "2030-01-01T00:00:00Z",
+        "message": "Example",
+        "method": "virtual",
+        "signers": [
+          {
+            "id": "example_id",
+            "notification_methods": [
+              "Email"
+            ],
+            "step": 1,
+            "verification_method": "Email"
+          }
+        ]
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "sender_email": "signer@example.invalid",
+        "method": "virtual",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "message": "Example",
+        "signers": [
+          {
+            "resource": "Example",
+            "id": "example_id",
+            "full_name": "Example Signer",
+            "email": "signer@example.invalid",
+            "whatsapp_phone_number": "+15005550006",
+            "government_id": "52998224725",
+            "has_accepted_terms": true,
+            "verification_method": "Email",
+            "notification_methods": [
+              "Email"
+            ],
+            "step": 1,
+            "notified": true,
+            "identity_verification_status": "Pending",
+            "completed": true,
+            "notification_history": [
+              {
+                "event": "Example",
+                "status": "sent",
+                "error_code": "Example",
+                "error_message": "Example",
+                "sent_at": "2030-01-01T00:00:00Z",
+                "failed_at": "2030-01-01T00:00:00Z"
+              }
+            ]
+          }
+        ],
+        "copy_receivers": [
+          {}
+        ],
+        "items": [
+          {
+            "id": "example_id",
+            "page": {
+              "id": "example_id",
+              "number": 1,
+              "height": 1650,
+              "width": 1275,
+              "download_url": "Example"
+            },
+            "signer": {},
+            "field": {},
+            "display_settings": "Example",
+            "value": "Example",
+            "completed": true
+          }
+        ],
+        "summary": {
+          "signer_count": 1,
+          "completed_count": 1,
+          "signers": [
+            {}
+          ]
+        },
+        "signing_urls": [
+          {
+            "signer_id": "example_signer_id",
+            "url": "https://example.invalid/webhooks/assinafy"
+          }
+        ]
+      },
+      "api": {
+        "method": "POST",
+        "path": "/v1/documents/{documentId}/assignments"
+      },
+      "estimateRequestExample": {
+        "copy_receivers": [
+          "Example"
+        ],
+        "document_id": "example_document_id",
+        "estimate_only": true,
+        "expires_at": "2030-01-01T00:00:00Z",
+        "message": "Example",
+        "method": "virtual",
+        "signers": [
+          {
+            "id": "example_id",
+            "notification_methods": [
+              "Email"
+            ],
+            "step": 1,
+            "verification_method": "Email"
+          }
+        ]
+      },
+      "estimateResponseExample": {
+        "cost_estimate": {
+          "documents": 1,
+          "credits": 0,
+          "needs_extra_document": false,
+          "extra_document_cost": 0,
+          "total_credits": 0,
+          "breakdown": [
+            {
+              "code": "NotificationEmail",
+              "name": "Email Notification",
+              "cost": 0,
+              "quantity": 1,
+              "unit_cost": 0
+            }
+          ],
+          "document_balance": 10,
+          "credit_balance": 20,
+          "has_sufficient_resources": true,
+          "blocking_reason": null,
+          "message": null
+        }
+      },
+      "estimateApi": {
+        "method": "POST",
+        "path": "/v1/documents/{documentId}/assignments/estimate-cost"
+      }
+    },
+    {
+      "name": "assinafy_create_document_from_template",
+      "description": "Generate a document from a saved template and invite one signer per role, by signer ID or full name and email. Find roles with assinafy_list_templates and validate editor_fields values with assinafy_validate_fields first. This sends invitations and can consume credits.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Send a template for signature"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "description": "template ID"
+          },
+          "signers": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "role_id": {
+                  "type": "string",
+                  "description": "template role ID"
+                },
+                "id": {
+                  "type": "string",
+                  "description": "existing signer ID; use instead of full_name and email"
+                },
+                "full_name": {
+                  "type": "string",
+                  "description": "signer's full name; required when id is omitted"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "signer's email address, required when id is omitted; existing exact matches are reused"
+                },
+                "verification_method": {
+                  "type": "string",
+                  "description": "Email (default), Whatsapp, DigitalCertificate (A1/A3), or IdDocumentFaceMatchBasic (ID photo and liveness)"
+                },
+                "notification_methods": {
+                  "type": [
+                    "null",
+                    "array"
+                  ],
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "at most one channel: Email or Whatsapp; inferred from verification_method when omitted"
+                },
+                "step": {
+                  "type": [
+                    "null",
+                    "integer"
+                  ],
+                  "description": "signing order, contiguous from 1; all signers must set it if any does"
+                }
+              },
+              "required": [
+                "role_id"
+              ],
+              "additionalProperties": false
+            },
+            "description": "one signer per template role, each by ID or by name and email"
+          },
+          "name": {
+            "type": "string",
+            "description": "custom document name"
+          },
+          "message": {
+            "type": "string",
+            "description": "signing invitation message"
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "assignment expiry in RFC 3339 format"
+          },
+          "editor_fields": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "field_id": {
+                  "type": "string",
+                  "description": "template editor field ID"
+                },
+                "value": {
+                  "type": "string",
+                  "description": "value to bake into the generated document"
+                }
+              },
+              "required": [
+                "field_id",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "description": "template editor field values"
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "tag names, merged with the template's defaults"
+          },
+          "account_id": {
+            "type": "string",
+            "description": "account ID; uses request routing if omitted"
+          },
+          "estimate_only": {
+            "type": "boolean",
+            "description": "preview cost and balances for the given roles without creating contacts, documents or invitations; roles alone are sufficient"
+          }
+        },
+        "required": [
+          "template_id",
+          "signers"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Document",
+            "not": {
+              "required": [
+                "cost_estimate"
+              ]
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "cost_estimate": {
+                "$ref": "#/$defs/CostEstimate"
+              }
+            },
+            "required": [
+              "cost_estimate"
+            ]
+          }
+        ]
+      },
+      "requestExample": {
+        "template_id": "example_template_id",
+        "signers": [
+          {
+            "role_id": "example_role_id",
+            "id": "example_id",
+            "verification_method": "Email",
+            "notification_methods": [
+              "Email"
+            ],
+            "step": 1
+          }
+        ],
+        "name": "Example",
+        "message": "Example",
+        "expires_at": "2030-01-02T00:00:00Z",
+        "editor_fields": [
+          {
+            "field_id": "example_field_id",
+            "value": "Example"
+          }
+        ],
+        "tags": [
+          "Example"
+        ],
+        "account_id": "example_account_id",
+        "estimate_only": false
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "account_id": "example_account_id",
+        "template_id": "example_template_id",
+        "name": "Example",
+        "status": "certificated",
+        "artifacts": {
+          "original": "Example",
+          "thumbnail": "Example",
+          "certificated": "Example",
+          "certificate-page": "Example",
+          "pades": "Example",
+          "bundle": "Example"
+        },
+        "is_closed": true,
+        "signing_url": "Example",
+        "decline_reason": "Example",
+        "declined_by": {
+          "resource": "Example",
+          "id": "example_id",
+          "full_name": "Example Signer",
+          "email": "signer@example.invalid",
+          "whatsapp_phone_number": "+15005550006",
+          "government_id": "52998224725",
+          "has_accepted_terms": true
+        },
+        "tags": [
+          {
+            "id": "example_id",
+            "name": "Example"
+          }
+        ],
+        "assignment": {
+          "resource": "Example",
+          "id": "example_id",
+          "sender_email": "signer@example.invalid",
+          "method": "virtual",
+          "expires_at": "2030-01-01T00:00:00Z",
+          "message": "Example",
+          "signers": [
+            {
+              "resource": "Example",
+              "id": "example_id",
+              "full_name": "Example Signer",
+              "email": "signer@example.invalid",
+              "whatsapp_phone_number": "+15005550006",
+              "government_id": "52998224725",
+              "has_accepted_terms": true,
+              "verification_method": "Email",
+              "notification_methods": [
+                "Email"
+              ],
+              "step": 1,
+              "notified": true,
+              "identity_verification_status": "Pending",
+              "completed": true,
+              "notification_history": [
+                {
+                  "event": "Example",
+                  "status": "sent",
+                  "error_code": "Example",
+                  "error_message": "Example",
+                  "sent_at": "2030-01-01T00:00:00Z",
+                  "failed_at": "2030-01-01T00:00:00Z"
+                }
+              ]
+            }
+          ],
+          "copy_receivers": [
+            {}
+          ],
+          "items": [
+            {
+              "id": "example_id",
+              "page": {
+                "id": "example_id",
+                "number": 1,
+                "height": 1650,
+                "width": 1275,
+                "download_url": "Example"
+              },
+              "signer": {},
+              "field": {},
+              "display_settings": "Example",
+              "value": "Example",
+              "completed": true
+            }
+          ],
+          "summary": {
+            "signer_count": 1,
+            "completed_count": 1,
+            "signers": [
+              {}
+            ]
+          },
+          "signing_urls": [
+            {
+              "signer_id": "example_signer_id",
+              "url": "https://example.invalid/webhooks/assinafy"
+            }
+          ]
+        },
+        "pages": [
+          {
+            "id": "example_id",
+            "number": 1,
+            "height": 1650,
+            "width": 1275,
+            "download_url": "Example"
+          }
+        ],
+        "created_at": "2030-01-01T00:00:00Z",
+        "updated_at": "2030-01-01T00:00:00Z",
+        "activities": [
+          {
+            "id": 1,
+            "event": "Example",
+            "message": "Example",
+            "payload": {},
+            "origin": {
+              "ip": "Example",
+              "user-agent": "Example"
+            },
+            "created_at": "2030-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "api": {
+        "method": "POST",
+        "path": "/v1/accounts/{accountId}/templates/{templateId}/documents"
+      },
+      "estimateRequestExample": {
+        "template_id": "example_template_id",
+        "signers": [
+          {
+            "role_id": "example_role_id",
+            "id": "example_id",
+            "verification_method": "Email",
+            "notification_methods": [
+              "Email"
+            ],
+            "step": 1
+          }
+        ],
+        "name": "Example",
+        "message": "Example",
+        "expires_at": "2030-01-02T00:00:00Z",
+        "editor_fields": [
+          {
+            "field_id": "example_field_id",
+            "value": "Example"
+          }
+        ],
+        "tags": [
+          "Example"
+        ],
+        "account_id": "example_account_id",
+        "estimate_only": true
+      },
+      "estimateResponseExample": {
+        "cost_estimate": {
+          "documents": 1,
+          "credits": 0,
+          "needs_extra_document": false,
+          "extra_document_cost": 0,
+          "total_credits": 0,
+          "breakdown": [
+            {
+              "code": "NotificationEmail",
+              "name": "Email Notification",
+              "cost": 0,
+              "quantity": 1,
+              "unit_cost": 0
+            }
+          ],
+          "document_balance": 10,
+          "credit_balance": 20,
+          "has_sufficient_resources": true,
+          "blocking_reason": null,
+          "message": null
+        }
+      },
+      "estimateApi": {
+        "method": "POST",
+        "path": "/v1/accounts/{accountId}/templates/{templateId}/documents/estimate-cost"
+      }
+    },
+    {
+      "name": "assinafy_resend_notification",
+      "description": "Send one reminder to a pending signer in the assignment's active step, after confirming with assinafy_get_document that they have not signed. May consume notification credits; never repeat a reminder only because progress is unchanged.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Remind a signer"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "unique document ID"
+          },
+          "assignment_id": {
+            "type": "string",
+            "description": "unique assignment ID"
+          },
+          "signer_id": {
+            "type": "string",
+            "description": "unique signer ID to notify"
+          },
+          "estimate_only": {
+            "type": "boolean",
+            "description": "preview the reminder cost and balances without notifying the signer"
+          }
+        },
+        "required": [
+          "document_id",
+          "assignment_id",
+          "signer_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "is_sent": {
+                "type": "boolean"
+              },
+              "document_id": {
+                "type": "string"
+              },
+              "signer_id": {
+                "type": "string"
+              }
+            },
+            "not": {
+              "required": [
+                "cost_estimate"
+              ]
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "cost_estimate": {
+                "$ref": "#/$defs/CostEstimate"
+              }
+            },
+            "required": [
+              "cost_estimate"
+            ]
+          }
+        ]
+      },
+      "requestExample": {
+        "document_id": "example_document_id",
+        "assignment_id": "example_assignment_id",
+        "signer_id": "example_signer_id",
+        "estimate_only": false
+      },
+      "responseExample": {
+        "is_sent": true,
+        "document_id": "example_document_id",
+        "signer_id": "example_signer_id"
+      },
+      "api": {
+        "method": "PUT",
+        "path": "/v1/documents/{documentId}/assignments/{assignmentId}/signers/{signerId}/resend"
+      },
+      "estimateRequestExample": {
+        "document_id": "example_document_id",
+        "assignment_id": "example_assignment_id",
+        "signer_id": "example_signer_id",
+        "estimate_only": true
+      },
+      "estimateResponseExample": {
+        "cost_estimate": {
+          "documents": 1,
+          "credits": 0,
+          "needs_extra_document": false,
+          "extra_document_cost": 0,
+          "total_credits": 0,
+          "breakdown": [
+            {
+              "code": "NotificationEmail",
+              "name": "Email Notification",
+              "cost": 0,
+              "quantity": 1,
+              "unit_cost": 0
+            }
+          ],
+          "document_balance": 10,
+          "credit_balance": 20,
+          "has_sufficient_resources": true,
+          "blocking_reason": null,
+          "message": null
+        }
+      },
+      "estimateApi": {
+        "method": "POST",
+        "path": "/v1/documents/{documentId}/assignments/{assignmentId}/signers/{signerId}/estimate-resend-cost"
+      }
+    },
+    {
+      "name": "assinafy_set_assignment_expiration",
+      "description": "Change when an existing signature request expires, using an RFC 3339 timestamp. Assinafy may refuse for requests that already expired.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Change the deadline"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "unique document ID"
+          },
+          "assignment_id": {
+            "type": "string",
+            "description": "unique assignment ID"
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "new expiry timestamp in RFC 3339 format"
+          }
+        },
+        "required": [
+          "document_id",
+          "assignment_id",
+          "expires_at"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Assignment"
+      },
+      "requestExample": {
+        "document_id": "example_document_id",
+        "assignment_id": "example_assignment_id",
+        "expires_at": "2030-01-02T00:00:00Z"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "sender_email": "signer@example.invalid",
+        "method": "virtual",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "message": "Example",
+        "signers": [
+          {
+            "resource": "Example",
+            "id": "example_id",
+            "full_name": "Example Signer",
+            "email": "signer@example.invalid",
+            "whatsapp_phone_number": "+15005550006",
+            "government_id": "52998224725",
+            "has_accepted_terms": true,
+            "verification_method": "Email",
+            "notification_methods": [
+              "Email"
+            ],
+            "step": 1,
+            "notified": true,
+            "identity_verification_status": "Pending",
+            "completed": true,
+            "notification_history": [
+              {
+                "event": "Example",
+                "status": "sent",
+                "error_code": "Example",
+                "error_message": "Example",
+                "sent_at": "2030-01-01T00:00:00Z",
+                "failed_at": "2030-01-01T00:00:00Z"
+              }
+            ]
+          }
+        ],
+        "copy_receivers": [
+          {}
+        ],
+        "items": [
+          {
+            "id": "example_id",
+            "page": {
+              "id": "example_id",
+              "number": 1,
+              "height": 1650,
+              "width": 1275,
+              "download_url": "Example"
+            },
+            "signer": {},
+            "field": {},
+            "display_settings": "Example",
+            "value": "Example",
+            "completed": true
+          }
+        ],
+        "summary": {
+          "signer_count": 1,
+          "completed_count": 1,
+          "signers": [
+            {}
+          ]
+        },
+        "signing_urls": [
+          {
+            "signer_id": "example_signer_id",
+            "url": "https://example.invalid/webhooks/assinafy"
+          }
+        ]
+      },
+      "api": {
+        "method": "PUT",
+        "path": "/v1/documents/{documentId}/assignments/{assignmentId}/reset-expiration"
+      }
+    },
+    {
+      "name": "assinafy_list_signers",
+      "description": "List the signers of a workspace. Use it to resolve a recipient to a signer ID; ask the user about ambiguous matches before sending.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List signers"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Authorized workspace; discovered from OAuth when omitted.",
+            "minLength": 1
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number.",
+            "minimum": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "description": "Records per page (max 100).",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "search": {
+            "type": "string",
+            "description": "Filter by full_name or email."
+          }
+        },
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Signer"
+            }
+          },
+          "meta": {
+            "$ref": "#/$defs/PaginationMeta"
+          }
+        }
+      },
+      "requestExample": {
+        "account_id": "example_account_id",
+        "page": 1,
+        "per_page": 1,
+        "search": "Example"
+      },
+      "responseExample": {
+        "data": [
+          {
+            "resource": "Example",
+            "id": "example_id",
+            "full_name": "Example Signer",
+            "email": "signer@example.invalid",
+            "whatsapp_phone_number": "+15005550006",
+            "government_id": "52998224725",
+            "has_accepted_terms": true
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "per_page": 1,
+          "total": 1
+        }
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/accounts/{accountId}/signers"
+      }
+    },
+    {
+      "name": "assinafy_get_signer",
+      "description": "Retrieve a signer's information.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Get signer"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Authorized workspace; discovered from OAuth when omitted.",
+            "minLength": 1
+          },
+          "signer_id": {
+            "type": "string",
+            "description": "The signer ID.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "signer_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Signer"
+      },
+      "requestExample": {
+        "account_id": "example_account_id",
+        "signer_id": "example_signer_id"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "full_name": "Example Signer",
+        "email": "signer@example.invalid",
+        "whatsapp_phone_number": "+15005550006",
+        "government_id": "52998224725",
+        "has_accepted_terms": true
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/accounts/{accountId}/signers/{signerId}"
+      }
+    },
+    {
+      "name": "assinafy_create_signer",
+      "description": "Create a signer in the workspace. Search with assinafy_list_signers first to avoid duplicates. Sends no invitation.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Create signer"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Authorized workspace; discovered from OAuth when omitted.",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "government_id": {
+            "type": "string",
+            "description": "Signer's CPF (11 digits) or CNPJ (14 characters; may be alphanumeric). Formatting is accepted and the value is normalized on save. Required before the signer can use a verification method that identifies them by CPF."
+          },
+          "whatsapp_phone_number": {
+            "type": "string",
+            "description": "E.164; normalized on save."
+          }
+        },
+        "required": [
+          "full_name"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Signer"
+      },
+      "requestExample": {
+        "account_id": "example_account_id",
+        "email": "signer@example.invalid",
+        "full_name": "Example Signer",
+        "government_id": "52998224725",
+        "whatsapp_phone_number": "+15005550006"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "full_name": "Example Signer",
+        "email": "signer@example.invalid",
+        "whatsapp_phone_number": "+15005550006",
+        "government_id": "52998224725",
+        "has_accepted_terms": true
+      },
+      "api": {
+        "method": "POST",
+        "path": "/v1/accounts/{accountId}/signers"
+      }
+    },
+    {
+      "name": "assinafy_update_signer",
+      "description": "Update a signer's information.\n\n**Verification integrity:** `email` / `whatsapp_phone_number` cannot be changed while the signer has verified that channel on an in-flight (not yet certificated) document — the response is `400` naming the offending document(s). Already-certificated documents do not block updates. Changing a channel that has *unverified* in-flight requests rotates their access/verification codes (invalidating previously sent links/OTPs); use the resend endpoint to redeliver. `full_name` can always be updated.",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Update signer"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Authorized workspace; discovered from OAuth when omitted.",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "government_id": {
+            "type": "string",
+            "description": "Signer's CPF (11 digits) or CNPJ (14 characters; may be alphanumeric). Formatting is accepted and the value is normalized on save. Required before the signer can use a verification method that identifies them by CPF."
+          },
+          "signer_id": {
+            "type": "string",
+            "description": "The signer ID.",
+            "minLength": 1
+          },
+          "whatsapp_phone_number": {
+            "type": "string",
+            "description": "E.164; normalized on save."
+          }
+        },
+        "required": [
+          "signer_id"
+        ],
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "full_name"
+            ]
+          },
+          {
+            "required": [
+              "email"
+            ]
+          },
+          {
+            "required": [
+              "whatsapp_phone_number"
+            ]
+          },
+          {
+            "required": [
+              "government_id"
+            ]
+          }
+        ]
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Signer"
+      },
+      "requestExample": {
+        "account_id": "example_account_id",
+        "email": "signer@example.invalid",
+        "full_name": "Example Signer",
+        "government_id": "52998224725",
+        "signer_id": "example_signer_id",
+        "whatsapp_phone_number": "+15005550006"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "full_name": "Example Signer",
+        "email": "signer@example.invalid",
+        "whatsapp_phone_number": "+15005550006",
+        "government_id": "52998224725",
+        "has_accepted_terms": true
+      },
+      "api": {
+        "method": "PUT",
+        "path": "/v1/accounts/{accountId}/signers/{signerId}"
+      }
+    },
+    {
+      "name": "assinafy_list_templates",
+      "description": "List saved templates with their signer roles, pages and field placements (field_id). Template authoring is done in Assinafy.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List templates"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "page number (1-based)"
+          },
+          "per_page": {
+            "type": "integer",
+            "description": "results per page"
+          },
+          "search": {
+            "type": "string",
+            "description": "filter templates by name"
+          },
+          "account_id": {
+            "type": "string",
+            "description": "account ID; uses default if omitted"
+          }
+        },
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Template"
+            }
+          },
+          "meta": {
+            "$ref": "#/$defs/PaginationMeta"
+          }
+        }
+      },
+      "requestExample": {
+        "page": 1,
+        "per_page": 1,
+        "search": "Example",
+        "account_id": "example_account_id"
+      },
+      "responseExample": {
+        "data": [
+          {
+            "resource": "Example",
+            "id": "example_id",
+            "name": "Example",
+            "document_name": "Example",
+            "message": "Example",
+            "status": "ready",
+            "pages": [
+              {
+                "id": "example_id",
+                "number": 1,
+                "height": 1650,
+                "width": 1275,
+                "download_url": "Example",
+                "fields": [
+                  {
+                    "id": "example_id",
+                    "field_id": "example_field_id",
+                    "role_id": "example_role_id",
+                    "label": "Example",
+                    "display_settings": "Example",
+                    "created_at": "2030-01-01T00:00:00Z",
+                    "updated_at": "2030-01-01T00:00:00Z"
+                  }
+                ]
+              }
+            ],
+            "roles": [
+              {
+                "id": "example_id",
+                "name": "Example",
+                "assignment_type": "Signer",
+                "created_at": "2030-01-01T00:00:00Z",
+                "updated_at": "2030-01-01T00:00:00Z"
+              }
+            ],
+            "tags": [
+              {
+                "id": "example_id",
+                "name": "Example"
+              }
+            ],
+            "default_document_tags": [
+              {
+                "id": "example_id",
+                "name": "Example"
+              }
+            ],
+            "created_at": "2030-01-01T00:00:00Z",
+            "updated_at": "2030-01-01T00:00:00Z"
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "per_page": 1,
+          "total": 1
+        }
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/accounts/{accountId}/templates"
+      }
+    },
+    {
+      "name": "assinafy_get_template",
+      "description": "Get one saved template with its roles and field placements.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Get a template"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "template_id": {
+            "type": "string",
+            "description": "unique template ID"
+          },
+          "account_id": {
+            "type": "string",
+            "description": "account ID; uses default if omitted"
+          }
+        },
+        "required": [
+          "template_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Template"
+      },
+      "requestExample": {
+        "template_id": "example_template_id",
+        "account_id": "example_account_id"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "name": "Example",
+        "document_name": "Example",
+        "message": "Example",
+        "status": "ready",
+        "pages": [
+          {
+            "id": "example_id",
+            "number": 1,
+            "height": 1650,
+            "width": 1275,
+            "download_url": "Example",
+            "fields": [
+              {
+                "id": "example_id",
+                "field_id": "example_field_id",
+                "role_id": "example_role_id",
+                "label": "Example",
+                "display_settings": "Example",
+                "created_at": "2030-01-01T00:00:00Z",
+                "updated_at": "2030-01-01T00:00:00Z"
+              }
+            ]
+          }
+        ],
+        "roles": [
+          {
+            "id": "example_id",
+            "name": "Example",
+            "assignment_type": "Signer",
+            "created_at": "2030-01-01T00:00:00Z",
+            "updated_at": "2030-01-01T00:00:00Z"
+          }
+        ],
+        "tags": [
+          {
+            "id": "example_id",
+            "name": "Example"
+          }
+        ],
+        "default_document_tags": [
+          {
+            "id": "example_id",
+            "name": "Example"
+          }
+        ],
+        "created_at": "2030-01-01T00:00:00Z",
+        "updated_at": "2030-01-01T00:00:00Z"
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/accounts/{accountId}/templates/{templateId}"
+      }
+    },
+    {
+      "name": "assinafy_list_fields",
+      "description": "List the field definitions of a workspace.\n\nWhen `include_standard` is enabled, records of type `signature`, `initial` and `signatureDate` are also returned. Match definitions to template placement field_id and ask about ambiguous names.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "List fields"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Authorized workspace; discovered from OAuth when omitted.",
+            "minLength": 1
+          },
+          "include_inactive": {
+            "type": "boolean",
+            "description": "Include inactive field definitions."
+          },
+          "include_standard": {
+            "type": "boolean",
+            "description": "Include standard field types (signature, initial, signatureDate)."
+          }
+        },
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Field"
+            }
+          },
+          "meta": {
+            "$ref": "#/$defs/PaginationMeta"
+          }
+        }
+      },
+      "requestExample": {
+        "account_id": "example_account_id",
+        "include_inactive": true,
+        "include_standard": true
+      },
+      "responseExample": {
+        "data": [
+          {
+            "resource": "Example",
+            "id": "example_id",
+            "name": "Example",
+            "type": "Example",
+            "regex": "Example",
+            "is_pre_defined": true,
+            "is_active": true,
+            "is_required": true,
+            "is_standard": true,
+            "is_read_only": true,
+            "is_visible": true
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "per_page": 1,
+          "total": 1
+        }
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/accounts/{accountId}/fields"
+      }
+    },
+    {
+      "name": "assinafy_get_field",
+      "description": "Retrieve a single field definition.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Get field"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Authorized workspace; discovered from OAuth when omitted.",
+            "minLength": 1
+          },
+          "field_id": {
+            "type": "string",
+            "description": "The field ID.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "field_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/Field"
+      },
+      "requestExample": {
+        "account_id": "example_account_id",
+        "field_id": "example_field_id"
+      },
+      "responseExample": {
+        "resource": "Example",
+        "id": "example_id",
+        "name": "Example",
+        "type": "Example",
+        "regex": "Example",
+        "is_pre_defined": true,
+        "is_active": true,
+        "is_required": true,
+        "is_standard": true,
+        "is_read_only": true,
+        "is_visible": true
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/accounts/{accountId}/fields/{fieldId}"
+      }
+    },
+    {
+      "name": "assinafy_validate_fields",
+      "description": "Validate one or more input values against existing field definitions without creating a document or requesting signatures. Supply field/value pairs in values; the server sends the documented JSON array. Check each result's success before requesting signatures.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Validate multiple field values"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Authorized workspace; discovered from OAuth when omitted.",
+            "minLength": 1
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field_id": {
+                  "type": "string",
+                  "description": "The field definition ID."
+                },
+                "value": {
+                  "description": "The input value to validate."
+                }
+              },
+              "required": [
+                "field_id",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Field/value pairs to validate; sent to Assinafy as the JSON request array."
+          }
+        },
+        "required": [
+          "values"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/FieldValidationResult"
+            }
+          },
+          "meta": {
+            "$ref": "#/$defs/PaginationMeta"
+          }
+        }
+      },
+      "requestExample": {
+        "account_id": "example_account_id",
+        "values": [
+          {
+            "field_id": "example_field_id",
+            "value": "Example"
+          }
+        ]
+      },
+      "responseExample": {
+        "data": [
+          {
+            "field_id": "example_field_id",
+            "type": "Example",
+            "success": true,
+            "error_message": "Example"
+          }
+        ],
+        "meta": {
+          "current_page": 1,
+          "last_page": 1,
+          "per_page": 1,
+          "total": 1
+        }
+      },
+      "api": {
+        "method": "POST",
+        "path": "/v1/accounts/{accountId}/fields/validate-multiple"
+      }
+    },
+    {
+      "name": "assinafy_download_document",
+      "description": "Download a document artifact as base64: original (default), certificated, certificate-page, pades or bundle. Download the signed PDF only when the document is certificated and the artifact is listed.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Download a document"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "unique document ID"
+          },
+          "artifact": {
+            "type": "string",
+            "description": "original (default), certificated, certificate-page, pades, or bundle"
+          }
+        },
+        "required": [
+          "document_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string"
+          },
+          "artifact": {
+            "type": "string"
+          },
+          "base64": {
+            "type": "string"
+          }
+        }
+      },
+      "requestExample": {
+        "document_id": "example_document_id",
+        "artifact": "Example"
+      },
+      "responseExample": {
+        "document_id": "example_document_id",
+        "artifact": "Example",
+        "base64": "JVBERi0xLjcKJSVFT0Y="
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/documents/{documentId}/download/{artifactName}"
+      }
+    },
+    {
+      "name": "assinafy_download_document_page",
+      "description": "Download the rendered image of a specific document page. Use a page_id returned by assinafy_get_document. Returns base64.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Download document page"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "Document ID.",
+            "minLength": 1
+          },
+          "page_id": {
+            "type": "string",
+            "description": "The page ID.",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "document_id",
+          "page_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string"
+          },
+          "page_id": {
+            "type": "string"
+          },
+          "base64": {
+            "type": "string"
+          }
+        }
+      },
+      "requestExample": {
+        "document_id": "example_document_id",
+        "page_id": "example_page_id"
+      },
+      "responseExample": {
+        "document_id": "example_document_id",
+        "page_id": "example_page_id",
+        "base64": "JVBERi0xLjcKJSVFT0Y="
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/documents/{documentId}/pages/{pageId}/download"
+      }
+    },
+    {
+      "name": "assinafy_delete_document",
+      "description": "Delete a document only when the user's instruction explicitly authorizes deletion. Inspect its current state first; Assinafy enforces which documents may be deleted.",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false,
+        "title": "Delete a document"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "unique document ID to delete"
+          }
+        },
+        "required": [
+          "document_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": null,
+      "requestExample": {
+        "document_id": "example_document_id"
+      },
+      "responseExample": null,
+      "api": {
+        "method": "DELETE",
+        "path": "/v1/documents/{documentId}"
+      },
+      "textResponse": "Document deleted successfully"
+    },
+    {
+      "name": "assinafy_verify_document",
+      "description": "Verify a signed document using its actual Assinafy SHA-1 signature hash. Public lookup; requires no workspace connection and sends no credential upstream.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Verify a signed document"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "description": "SHA-1 signature hash of the signed document"
+          }
+        },
+        "required": [
+          "hash"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "$ref": "#/$defs/DocumentVerification"
+      },
+      "requestExample": {
+        "hash": "0000000000000000000000000000000000000000"
+      },
+      "responseExample": {
+        "hash": "0000000000000000000000000000000000000000",
+        "id": "example_id",
+        "agreement_code": "Example",
+        "status": "pending_signature",
+        "page_count": "Example",
+        "signer_count": "Example",
+        "completed_count": 1,
+        "completed_at": "2030-01-01T00:00:00Z",
+        "verified_at": "2030-01-01T00:00:00Z",
+        "is_valid": true,
+        "message": "Example"
+      },
+      "api": {
+        "method": "GET",
+        "path": "/v1/documents/{documentSignatureHash}/verify"
+      }
+    },
+    {
+      "name": "assinafy_show_document",
+      "description": "Show a status card for one known document: its status, who has signed, who is still pending and when it expires. Apps-capable hosts render it with a reminder button; other clients get the same summary as text. Resolve the document with assinafy_list_documents first.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Show document status"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "description": "unique document ID"
+          }
+        },
+        "required": [
+          "document_id"
+        ],
+        "additionalProperties": false
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "view": {
+            "type": "string"
+          },
+          "document_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "assignment_id": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string"
+          },
+          "signed": {
+            "type": "integer"
+          },
+          "signers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/CardSigner"
+            }
+          }
+        }
+      },
+      "requestExample": {
+        "document_id": "example_document_id"
+      },
+      "responseExample": {
+        "view": "status",
+        "document_id": "example_document_id",
+        "name": "Example",
+        "status": "pending_signature",
+        "assignment_id": "example_assignment_id",
+        "expires_at": "2030-01-02T00:00:00Z",
+        "signed": 0,
+        "signers": [
+          {
+            "id": "example_id",
+            "name": "Example",
+            "signed": true,
+            "step": 1
+          }
+        ]
+      },
+      "api": {
+        "workflow": true
+      }
+    },
+    {
+      "name": "assinafy_review_signature_request",
+      "description": "Preview an assinafy_create_assignment call without sending anything: same arguments, checked against the document and signers. Use it when the user wants to review before sending. Apps-capable hosts render a card whose Send button performs the request; other clients get the summary as text, and the request is sent only after the user confirms.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Review a signature request"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "copy_receivers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Signer IDs that only receive a copy."
+          },
+          "document_id": {
+            "type": "string",
+            "description": "Document ID.",
+            "minLength": 1
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "display_settings": {
+                        "type": "object",
+                        "properties": {
+                          "backgroundColor": {
+                            "type": "string",
+                            "description": "CSS-compatible background-color presentation metadata."
+                          },
+                          "fontFamily": {
+                            "type": "string",
+                            "description": "Font-family presentation metadata."
+                          },
+                          "fontSize": {
+                            "type": "number",
+                            "description": "Font size in the 150-DPI page-image coordinate system.",
+                            "exclusiveMinimum": 0,
+                            "format": "float"
+                          },
+                          "height": {
+                            "type": "number",
+                            "description": "Height of the placement rectangle, in page-image pixels.",
+                            "exclusiveMinimum": 0,
+                            "format": "float"
+                          },
+                          "left": {
+                            "type": "number",
+                            "description": "Horizontal distance from the page's left edge, in page-image pixels.",
+                            "minimum": 0,
+                            "format": "float"
+                          },
+                          "top": {
+                            "type": "number",
+                            "description": "Vertical distance from the page's top edge, in page-image pixels.",
+                            "minimum": 0,
+                            "format": "float"
+                          },
+                          "width": {
+                            "type": "number",
+                            "description": "Width of the placement rectangle, in page-image pixels.",
+                            "exclusiveMinimum": 0,
+                            "format": "float"
+                          }
+                        },
+                        "description": "A field placement rectangle on a document page. Geometry values are pixels in Assinafy's 150-DPI page image, measured from the upper-left corner. Clients must keep the rectangle within the selected page's width and height; the API does not clamp out-of-bounds values.",
+                        "required": [
+                          "left",
+                          "top",
+                          "width",
+                          "height",
+                          "fontSize"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "field_id": {
+                        "type": "string"
+                      },
+                      "signer_id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "signer_id",
+                      "field_id",
+                      "display_settings"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "minItems": 1
+                },
+                "page_id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "page_id",
+                "fields"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Required for `collect`: field placements per page."
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "ISO 8601; default is no expiration. Must be at least one hour in the future.",
+            "format": "date-time"
+          },
+          "message": {
+            "type": "string",
+            "description": "Text included in the invitation email."
+          },
+          "method": {
+            "type": "string",
+            "default": "virtual",
+            "enum": [
+              "virtual",
+              "collect"
+            ]
+          },
+          "signers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "notification_methods": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "Email",
+                      "Whatsapp"
+                    ]
+                  },
+                  "description": "How the signer is told a signature is being requested. **Exactly one method per signer** — the array shape is historical, and sending two returns `400`. The method must also be compatible with `verification_method`: `Email` verification takes `Email`, `Whatsapp` verification takes `Whatsapp`, and `DigitalCertificate` and `IdDocumentFaceMatchBasic` take either. WhatsApp incurs an additional cost and is available only on paid subscriptions. Omit it to have it inferred from `verification_method`, or `{\"Email\"}` when neither is sent. See **Verification & Notification Methods** for the full pairing table.",
+                  "maxItems": 1,
+                  "example": [
+                    "Email"
+                  ]
+                },
+                "step": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "verification_method": {
+                  "type": "string",
+                  "description": "How the signer's identity is verified before signing. `Email` (default) sends a one-time code to the signer's email; `Whatsapp` sends the code over WhatsApp — the verification itself is not billed, but it requires the WhatsApp notification channel, so the signer costs 0.45 credits (available only on paid subscriptions); `DigitalCertificate` has the signer sign with their own ICP-Brasil certificate (A1/A3) — it requires the Digital Certificate feature, the signer must have a CPF or CNPJ in `government_id`, must be alone in its signing step, and is charged 0.5 credits per signer. A CPF requires that person's certificate (an e-CPF, or an e-CNPJ naming them as legal representative); a CNPJ requires an e-CNPJ for that company, from any of its representatives. `IdDocumentFaceMatchBasic` verifies the signer from a photo of their government ID, a photo of them holding it and a liveness check — it requires the ID Document + Face Match feature, the signer must have a valid CPF in `government_id`, and is charged a per-signer fee. Omit to default to `Email`.",
+                  "enum": [
+                    "Email",
+                    "Whatsapp",
+                    "DigitalCertificate",
+                    "IdDocumentFaceMatchBasic"
+                  ],
+                  "example": "Email"
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "method",
+          "signers",
+          "document_id"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "method": {
+                  "const": "collect"
+                }
+              },
+              "required": [
+                "method"
+              ]
+            },
+            "then": {
+              "properties": {
+                "entries": {
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "estimate_only": {
+                  "const": true
+                }
+              },
+              "required": [
+                "estimate_only"
+              ]
+            },
+            "else": {
+              "properties": {
+                "signers": {
+                  "items": {
+                    "required": [
+                      "id"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "view": {
+            "type": "string"
+          },
+          "document_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "already_sent": {
+            "type": "boolean"
+          },
+          "method": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string"
+          },
+          "signers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ReviewSigner"
+            }
+          },
+          "request": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": [
+                  "virtual",
+                  "collect"
+                ],
+                "default": "virtual"
+              },
+              "signers": {
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "verification_method": {
+                      "description": "How the signer's identity is verified before signing. `Email` (default) sends a one-time code to the signer's email; `Whatsapp` sends the code over WhatsApp — the verification itself is not billed, but it requires the WhatsApp notification channel, so the signer costs 0.45 credits (available only on paid subscriptions); `DigitalCertificate` has the signer sign with their own ICP-Brasil certificate (A1/A3) — it requires the Digital Certificate feature, the signer must have a CPF or CNPJ in `government_id`, must be alone in its signing step, and is charged 0.5 credits per signer. A CPF requires that person's certificate (an e-CPF, or an e-CNPJ naming them as legal representative); a CNPJ requires an e-CNPJ for that company, from any of its representatives. `IdDocumentFaceMatchBasic` verifies the signer from a photo of their government ID, a photo of them holding it and a liveness check — it requires the ID Document + Face Match feature, the signer must have a valid CPF in `government_id`, and is charged a per-signer fee. Omit to default to `Email`.",
+                      "type": "string",
+                      "enum": [
+                        "Email",
+                        "Whatsapp",
+                        "DigitalCertificate",
+                        "IdDocumentFaceMatchBasic"
+                      ],
+                      "example": "Email"
+                    },
+                    "notification_methods": {
+                      "description": "How the signer is told a signature is being requested. **Exactly one method per signer** — the array shape is historical, and sending two returns `400`. The method must also be compatible with `verification_method`: `Email` verification takes `Email`, `Whatsapp` verification takes `Whatsapp`, and `DigitalCertificate` and `IdDocumentFaceMatchBasic` take either. WhatsApp incurs an additional cost and is available only on paid subscriptions. Omit it to have it inferred from `verification_method`, or `{\"Email\"}` when neither is sent. See **Verification & Notification Methods** for the full pairing table.",
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "Email",
+                          "Whatsapp"
+                        ]
+                      },
+                      "example": [
+                        "Email"
+                      ],
+                      "maxItems": 1
+                    },
+                    "step": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "type": "object",
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              },
+              "entries": {
+                "description": "Required for `collect`: field placements per page.",
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "page_id": {
+                      "type": "string"
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "signer_id": {
+                            "type": "string"
+                          },
+                          "field_id": {
+                            "type": "string"
+                          },
+                          "display_settings": {
+                            "description": "A field placement rectangle on a document page. Geometry values are pixels in Assinafy's 150-DPI page image, measured from the upper-left corner. Clients must keep the rectangle within the selected page's width and height; the API does not clamp out-of-bounds values.",
+                            "required": [
+                              "left",
+                              "top",
+                              "width",
+                              "height",
+                              "fontSize"
+                            ],
+                            "properties": {
+                              "left": {
+                                "description": "Horizontal distance from the page's left edge, in page-image pixels.",
+                                "type": "number",
+                                "format": "float",
+                                "minimum": 0
+                              },
+                              "top": {
+                                "description": "Vertical distance from the page's top edge, in page-image pixels.",
+                                "type": "number",
+                                "format": "float",
+                                "minimum": 0
+                              },
+                              "width": {
+                                "description": "Width of the placement rectangle, in page-image pixels.",
+                                "type": "number",
+                                "format": "float",
+                                "exclusiveMinimum": 0
+                              },
+                              "height": {
+                                "description": "Height of the placement rectangle, in page-image pixels.",
+                                "type": "number",
+                                "format": "float",
+                                "exclusiveMinimum": 0
+                              },
+                              "fontFamily": {
+                                "description": "Font-family presentation metadata.",
+                                "type": "string"
+                              },
+                              "fontSize": {
+                                "description": "Font size in the 150-DPI page-image coordinate system.",
+                                "type": "number",
+                                "format": "float",
+                                "exclusiveMinimum": 0
+                              },
+                              "backgroundColor": {
+                                "description": "CSS-compatible background-color presentation metadata.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object",
+                            "additionalProperties": false
+                          }
+                        },
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "signer_id",
+                          "field_id",
+                          "display_settings"
+                        ]
+                      },
+                      "minItems": 1
+                    }
+                  },
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "page_id",
+                    "fields"
+                  ]
+                }
+              },
+              "message": {
+                "description": "Text included in the invitation email.",
+                "type": "string"
+              },
+              "expires_at": {
+                "description": "ISO 8601; default is no expiration. Must be at least one hour in the future.",
+                "type": "string",
+                "format": "date-time"
+              },
+              "copy_receivers": {
+                "description": "Signer IDs that only receive a copy.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "document_id": {
+                "type": "string",
+                "description": "Document ID.",
+                "minLength": 1
+              },
+              "estimate_only": {
+                "type": "boolean",
+                "description": "Preview cost and balances without creating an assignment or notifying anyone."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "method",
+              "signers",
+              "document_id"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "method": {
+                      "const": "collect"
+                    }
+                  },
+                  "required": [
+                    "method"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "entries"
+                  ],
+                  "properties": {
+                    "entries": {
+                      "minItems": 1
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "estimate_only": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "estimate_only"
+                  ]
+                },
+                "else": {
+                  "properties": {
+                    "signers": {
+                      "items": {
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "requestExample": {
+        "copy_receivers": [
+          "Example"
+        ],
+        "document_id": "example_document_id",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "message": "Example",
+        "method": "virtual",
+        "signers": [
+          {
+            "id": "example_id",
+            "notification_methods": [
+              "Email"
+            ],
+            "step": 1,
+            "verification_method": "Email"
+          }
+        ]
+      },
+      "responseExample": {
+        "view": "review",
+        "document_id": "example_document_id",
+        "name": "Example",
+        "status": "metadata_ready",
+        "already_sent": false,
+        "method": "virtual",
+        "expires_at": "2030-01-02T00:00:00Z",
+        "signers": [
+          {
+            "id": "example_id",
+            "name": "Example",
+            "email": "signer@example.invalid",
+            "verification": "Example"
+          }
+        ],
+        "request": {
+          "method": "virtual",
+          "signers": [
+            {
+              "id": "example_id",
+              "verification_method": "Email",
+              "notification_methods": [
+                "Email"
+              ],
+              "step": 1
+            }
+          ],
+          "message": "Example",
+          "expires_at": "2030-01-01T00:00:00Z",
+          "copy_receivers": [
+            "Example"
+          ],
+          "document_id": "example_document_id"
+        }
+      },
+      "api": {
+        "workflow": true
+      }
+    },
+    {
+      "name": "assinafy_place_fields",
+      "description": "Open a visual editor to place signature, initials, date and input fields on a metadata_ready document, then send it with method collect. Takes the assinafy_create_assignment arguments except method and entries. Sends nothing by itself: in apps-capable hosts the user places fields and presses Send; other clients get page sizes and field IDs as text to build entries.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Place signature fields"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "copy_receivers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Signer IDs that only receive a copy."
+          },
+          "document_id": {
+            "type": "string",
+            "description": "Document ID.",
+            "minLength": 1
+          },
+          "expires_at": {
+            "type": "string",
+            "description": "ISO 8601; default is no expiration. Must be at least one hour in the future.",
+            "format": "date-time"
+          },
+          "message": {
+            "type": "string",
+            "description": "Text included in the invitation email."
+          },
+          "signers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "notification_methods": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "Email",
+                      "Whatsapp"
+                    ]
+                  },
+                  "description": "How the signer is told a signature is being requested. **Exactly one method per signer** — the array shape is historical, and sending two returns `400`. The method must also be compatible with `verification_method`: `Email` verification takes `Email`, `Whatsapp` verification takes `Whatsapp`, and `DigitalCertificate` and `IdDocumentFaceMatchBasic` take either. WhatsApp incurs an additional cost and is available only on paid subscriptions. Omit it to have it inferred from `verification_method`, or `{\"Email\"}` when neither is sent. See **Verification & Notification Methods** for the full pairing table.",
+                  "maxItems": 1,
+                  "example": [
+                    "Email"
+                  ]
+                },
+                "step": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "verification_method": {
+                  "type": "string",
+                  "description": "How the signer's identity is verified before signing. `Email` (default) sends a one-time code to the signer's email; `Whatsapp` sends the code over WhatsApp — the verification itself is not billed, but it requires the WhatsApp notification channel, so the signer costs 0.45 credits (available only on paid subscriptions); `DigitalCertificate` has the signer sign with their own ICP-Brasil certificate (A1/A3) — it requires the Digital Certificate feature, the signer must have a CPF or CNPJ in `government_id`, must be alone in its signing step, and is charged 0.5 credits per signer. A CPF requires that person's certificate (an e-CPF, or an e-CNPJ naming them as legal representative); a CNPJ requires an e-CNPJ for that company, from any of its representatives. `IdDocumentFaceMatchBasic` verifies the signer from a photo of their government ID, a photo of them holding it and a liveness check — it requires the ID Document + Face Match feature, the signer must have a valid CPF in `government_id`, and is charged a per-signer fee. Omit to default to `Email`.",
+                  "enum": [
+                    "Email",
+                    "Whatsapp",
+                    "DigitalCertificate",
+                    "IdDocumentFaceMatchBasic"
+                  ],
+                  "example": "Email"
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "signers",
+          "document_id"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "method": {
+                  "const": "collect"
+                }
+              },
+              "required": [
+                "method"
+              ]
+            },
+            "then": {
+              "properties": {
+                "entries": {
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "entries"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "estimate_only": {
+                  "const": true
+                }
+              },
+              "required": [
+                "estimate_only"
+              ]
+            },
+            "else": {
+              "properties": {
+                "signers": {
+                  "items": {
+                    "required": [
+                      "id"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "properties": {
+          "view": {
+            "type": "string"
+          },
+          "document_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "number": {
+                  "type": "integer"
+                },
+                "width": {
+                  "type": "integer"
+                },
+                "height": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "signers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/ReviewSigner"
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "request": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": [
+                  "virtual",
+                  "collect"
+                ],
+                "default": "virtual"
+              },
+              "signers": {
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "verification_method": {
+                      "description": "How the signer's identity is verified before signing. `Email` (default) sends a one-time code to the signer's email; `Whatsapp` sends the code over WhatsApp — the verification itself is not billed, but it requires the WhatsApp notification channel, so the signer costs 0.45 credits (available only on paid subscriptions); `DigitalCertificate` has the signer sign with their own ICP-Brasil certificate (A1/A3) — it requires the Digital Certificate feature, the signer must have a CPF or CNPJ in `government_id`, must be alone in its signing step, and is charged 0.5 credits per signer. A CPF requires that person's certificate (an e-CPF, or an e-CNPJ naming them as legal representative); a CNPJ requires an e-CNPJ for that company, from any of its representatives. `IdDocumentFaceMatchBasic` verifies the signer from a photo of their government ID, a photo of them holding it and a liveness check — it requires the ID Document + Face Match feature, the signer must have a valid CPF in `government_id`, and is charged a per-signer fee. Omit to default to `Email`.",
+                      "type": "string",
+                      "enum": [
+                        "Email",
+                        "Whatsapp",
+                        "DigitalCertificate",
+                        "IdDocumentFaceMatchBasic"
+                      ],
+                      "example": "Email"
+                    },
+                    "notification_methods": {
+                      "description": "How the signer is told a signature is being requested. **Exactly one method per signer** — the array shape is historical, and sending two returns `400`. The method must also be compatible with `verification_method`: `Email` verification takes `Email`, `Whatsapp` verification takes `Whatsapp`, and `DigitalCertificate` and `IdDocumentFaceMatchBasic` take either. WhatsApp incurs an additional cost and is available only on paid subscriptions. Omit it to have it inferred from `verification_method`, or `{\"Email\"}` when neither is sent. See **Verification & Notification Methods** for the full pairing table.",
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "Email",
+                          "Whatsapp"
+                        ]
+                      },
+                      "example": [
+                        "Email"
+                      ],
+                      "maxItems": 1
+                    },
+                    "step": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "type": "object",
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              },
+              "entries": {
+                "description": "Required for `collect`: field placements per page.",
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "page_id": {
+                      "type": "string"
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "properties": {
+                          "signer_id": {
+                            "type": "string"
+                          },
+                          "field_id": {
+                            "type": "string"
+                          },
+                          "display_settings": {
+                            "description": "A field placement rectangle on a document page. Geometry values are pixels in Assinafy's 150-DPI page image, measured from the upper-left corner. Clients must keep the rectangle within the selected page's width and height; the API does not clamp out-of-bounds values.",
+                            "required": [
+                              "left",
+                              "top",
+                              "width",
+                              "height",
+                              "fontSize"
+                            ],
+                            "properties": {
+                              "left": {
+                                "description": "Horizontal distance from the page's left edge, in page-image pixels.",
+                                "type": "number",
+                                "format": "float",
+                                "minimum": 0
+                              },
+                              "top": {
+                                "description": "Vertical distance from the page's top edge, in page-image pixels.",
+                                "type": "number",
+                                "format": "float",
+                                "minimum": 0
+                              },
+                              "width": {
+                                "description": "Width of the placement rectangle, in page-image pixels.",
+                                "type": "number",
+                                "format": "float",
+                                "exclusiveMinimum": 0
+                              },
+                              "height": {
+                                "description": "Height of the placement rectangle, in page-image pixels.",
+                                "type": "number",
+                                "format": "float",
+                                "exclusiveMinimum": 0
+                              },
+                              "fontFamily": {
+                                "description": "Font-family presentation metadata.",
+                                "type": "string"
+                              },
+                              "fontSize": {
+                                "description": "Font size in the 150-DPI page-image coordinate system.",
+                                "type": "number",
+                                "format": "float",
+                                "exclusiveMinimum": 0
+                              },
+                              "backgroundColor": {
+                                "description": "CSS-compatible background-color presentation metadata.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object",
+                            "additionalProperties": false
+                          }
+                        },
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "signer_id",
+                          "field_id",
+                          "display_settings"
+                        ]
+                      },
+                      "minItems": 1
+                    }
+                  },
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "page_id",
+                    "fields"
+                  ]
+                }
+              },
+              "message": {
+                "description": "Text included in the invitation email.",
+                "type": "string"
+              },
+              "expires_at": {
+                "description": "ISO 8601; default is no expiration. Must be at least one hour in the future.",
+                "type": "string",
+                "format": "date-time"
+              },
+              "copy_receivers": {
+                "description": "Signer IDs that only receive a copy.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "document_id": {
+                "type": "string",
+                "description": "Document ID.",
+                "minLength": 1
+              },
+              "estimate_only": {
+                "type": "boolean",
+                "description": "Preview cost and balances without creating an assignment or notifying anyone."
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "method",
+              "signers",
+              "document_id"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "estimate_only": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "estimate_only"
+                  ]
+                },
+                "else": {
+                  "properties": {
+                    "signers": {
+                      "items": {
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "requestExample": {
+        "copy_receivers": [
+          "Example"
+        ],
+        "document_id": "example_document_id",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "message": "Example",
+        "signers": [
+          {
+            "id": "example_id",
+            "notification_methods": [
+              "Email"
+            ],
+            "step": 1,
+            "verification_method": "Email"
+          }
+        ]
+      },
+      "responseExample": {
+        "view": "place",
+        "document_id": "example_document_id",
+        "name": "Example",
+        "status": "metadata_ready",
+        "pages": [
+          {
+            "id": "example_id",
+            "number": 1,
+            "width": 1275,
+            "height": 1650
+          }
+        ],
+        "signers": [
+          {
+            "id": "example_id",
+            "name": "Example",
+            "email": "signer@example.invalid",
+            "verification": "Example"
+          }
+        ],
+        "fields": [
+          {
+            "id": "example_id",
+            "name": "Example",
+            "type": "Example"
+          }
+        ],
+        "request": {
+          "method": "collect",
+          "signers": [
+            {
+              "id": "example_id",
+              "verification_method": "Email",
+              "notification_methods": [
+                "Email"
+              ],
+              "step": 1
+            }
+          ],
+          "message": "Example",
+          "expires_at": "2030-01-01T00:00:00Z",
+          "copy_receivers": [
+            "Example"
+          ],
+          "document_id": "example_document_id"
+        }
+      },
+      "api": {
+        "workflow": true
+      }
+    }
+  ],
+  "$defs": {
+    "Assignment": {
+      "description": "A request for signers to sign a document.",
+      "properties": {
+        "resource": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "sender_email": {
+          "type": "string",
+          "format": "email"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "virtual",
+            "collect"
+          ]
+        },
+        "expires_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "signers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AssignmentSigner"
+          }
+        },
+        "copy_receivers": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AssignmentItem"
+          }
+        },
+        "summary": {
+          "$ref": "#/$defs/AssignmentSummary"
+        },
+        "signing_urls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SigningUrl"
+          }
+        }
+      },
+      "type": "object"
+    },
+    "AssignmentItem": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "page": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/DocumentPage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signer": {
+          "description": "Signer responsible for this item.",
+          "type": "object"
+        },
+        "field": {
+          "description": "Field definition associated with the item.",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "display_settings": {
+          "description": "Rendering metadata for the item. Collect items use the DisplaySettings schema; virtual and legacy items may return an empty or non-object value."
+        },
+        "value": {
+          "description": "Captured value when completed; `null` until then."
+        },
+        "completed": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "AssignmentSigner": {
+      "description": "A signer within an assignment: the base Signer plus per-assignment verification/notification details.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Signer"
+        },
+        {
+          "properties": {
+            "verification_method": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "notification_methods": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "step": {
+              "description": "Sequential signing step (defaults to 1).",
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "notified": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "identity_verification_status": {
+              "description": "Latest identity-document verification status; `InReview` means the account must decide it before the document can be certificated.",
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "Pending",
+                "InReview",
+                "Approved",
+                "Declined",
+                "Expired",
+                "Abandoned"
+              ]
+            },
+            "completed": {
+              "description": "Only present in account-owner contexts.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "notification_history": {
+              "description": "Per-channel delivery history for this signer (email + WhatsApp), most-recent send order.",
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "$ref": "#/$defs/NotificationHistoryEntry"
+              }
+            }
+          },
+          "type": "object"
+        }
+      ]
+    },
+    "AssignmentSummary": {
+      "properties": {
+        "signer_count": {
+          "type": "integer"
+        },
+        "completed_count": {
+          "type": "integer"
+        },
+        "signers": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "type": "object"
+    },
+    "CardSigner": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "signed": {
+          "type": "boolean"
+        },
+        "step": {
+          "type": "integer"
+        }
+      }
+    },
+    "CostEstimate": {
+      "description": "Cost breakdown for an assignment plus current account balances.",
+      "properties": {
+        "documents": {
+          "description": "Documents consumed (always 1).",
+          "type": "integer"
+        },
+        "credits": {
+          "description": "Total notification credits needed.",
+          "type": "number"
+        },
+        "needs_extra_document": {
+          "description": "True when the plan's document allowance is exhausted and an extra document will be charged from credits.",
+          "type": "boolean"
+        },
+        "extra_document_cost": {
+          "description": "Credits charged for the extra document when `needs_extra_document` is true.",
+          "type": "number"
+        },
+        "total_credits": {
+          "type": "number"
+        },
+        "breakdown": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CostEstimateBreakdownItem"
+          }
+        },
+        "document_balance": {
+          "type": "number"
+        },
+        "credit_balance": {
+          "type": "number"
+        },
+        "has_sufficient_resources": {
+          "type": "boolean"
+        },
+        "blocking_reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "PendingPayment",
+            "InsufficientDocuments",
+            "InsufficientCredits",
+            null
+          ]
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "CostEstimateBreakdownItem": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "number"
+        },
+        "quantity": {
+          "type": "integer"
+        },
+        "unit_cost": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "Document": {
+      "description": "A document and its current lifecycle state.",
+      "properties": {
+        "resource": {
+          "description": "Present in single-resource responses.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "account_id": {
+          "type": "string"
+        },
+        "template_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "description": "Status code — see GET /v1/documents/statuses.",
+          "type": "string"
+        },
+        "artifacts": {
+          "$ref": "#/$defs/DocumentArtifacts"
+        },
+        "is_closed": {
+          "type": "boolean"
+        },
+        "signing_url": {
+          "type": "string"
+        },
+        "decline_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "declined_by": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Signer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "assignment": {
+          "description": "Expanded assignment data when included via ?expand=assignment; null otherwise.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Assignment"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentPage"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "activities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentActivity"
+          }
+        }
+      },
+      "type": "object"
+    },
+    "DocumentActivity": {
+      "description": "A document activity event.",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "event": {
+          "description": "Event type code.",
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "payload": {
+          "type": [
+            "object",
+            "array",
+            "null"
+          ]
+        },
+        "origin": {
+          "description": "Request origin when available.",
+          "properties": {
+            "ip": {
+              "type": "string"
+            },
+            "user-agent": {
+              "type": "string"
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "type": "object"
+    },
+    "DocumentArtifacts": {
+      "type": "object",
+      "properties": {
+        "original": {
+          "type": "string"
+        },
+        "thumbnail": {
+          "type": "string"
+        },
+        "certificated": {
+          "type": "string"
+        },
+        "certificate-page": {
+          "type": "string"
+        },
+        "pades": {
+          "type": "string"
+        },
+        "bundle": {
+          "type": "string"
+        }
+      }
+    },
+    "DocumentPage": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "number": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "download_url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "DocumentVerification": {
+      "description": "The verification result for a document looked up by signature hash. When not verified, most fields are null and `is_valid` is false.",
+      "properties": {
+        "hash": {
+          "type": "string"
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agreement_code": {
+          "description": "Agreement code printed on the document certificate.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "page_count": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "signer_count": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "completed_count": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "completed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "is_valid": {
+          "type": "boolean"
+        },
+        "message": {
+          "description": "Reason when not valid.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Field": {
+      "description": "A reusable field definition.",
+      "properties": {
+        "resource": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "regex": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "is_pre_defined": {
+          "type": "boolean"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "is_required": {
+          "type": "boolean"
+        },
+        "is_standard": {
+          "type": "boolean"
+        },
+        "is_read_only": {
+          "type": "boolean"
+        },
+        "is_visible": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "FieldValidationResult": {
+      "description": "A per-field result from a multi-field validation.",
+      "properties": {
+        "field_id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "error_message": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "NotificationHistoryEntry": {
+      "description": "A single notification delivery record for a signer channel.",
+      "properties": {
+        "event": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "sent",
+            "failed"
+          ]
+        },
+        "error_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error_message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sent_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "failed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "type": "object"
+    },
+    "PaginationMeta": {
+      "type": "object",
+      "properties": {
+        "current_page": {
+          "type": "integer"
+        },
+        "last_page": {
+          "type": "integer"
+        },
+        "per_page": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      }
+    },
+    "ReviewSigner": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "verification": {
+          "type": "string"
+        }
+      }
+    },
+    "Signer": {
+      "description": "A signing party belonging to a workspace account.",
+      "properties": {
+        "resource": {
+          "description": "Present in single-resource responses.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "full_name": {
+          "type": "string"
+        },
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "email"
+        },
+        "whatsapp_phone_number": {
+          "description": "E.164 format; normalized on save.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "government_id": {
+          "description": "Signer's normalized CPF (11 digits) or CNPJ (14 characters; may be alphanumeric).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "has_accepted_terms": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "SigningUrl": {
+      "properties": {
+        "signer_id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Template": {
+      "description": "A reusable document template.",
+      "properties": {
+        "resource": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "document_name": {
+          "description": "Default name for documents created from this template.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "description": "Default invitation message.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "description": "One of uploading, uploaded, processing, ready, failed.",
+          "type": "string"
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TemplatePage"
+          }
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TemplateRole"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "default_document_tags": {
+          "description": "Applied to documents created from this template; only returned by the single-template endpoint.",
+          "type": "array",
+          "items": {
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "type": "object"
+    },
+    "TemplateFieldPlacement": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "field_id": {
+          "type": "string"
+        },
+        "role_id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "display_settings": {
+          "description": "Rendering metadata for the placement."
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "type": "object"
+    },
+    "TemplatePage": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "number": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "download_url": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TemplateFieldPlacement"
+          }
+        }
+      },
+      "type": "object"
+    },
+    "TemplateRole": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "assignment_type": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "type": "object"
+    },
+    "WhatsappNotification": {
+      "description": "A rendered WhatsApp notification sent for an assignment, split into header/body/buttons as the signer would see them.",
+      "properties": {
+        "sent_at": {
+          "description": "Unix timestamp when sent.",
+          "type": "integer"
+        },
+        "header": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "buttons": {
+          "type": "array",
+          "items": {
+            "properties": {
+              "text": {
+                "description": "The button label shown to the signer.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "phone_number": {
+          "description": "Recipient phone (E.164).",
+          "type": "string"
+        },
+        "signer_id": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  }
+}

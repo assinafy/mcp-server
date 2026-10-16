@@ -45,11 +45,76 @@ is discovered automatically; `account_id` may repeat it but cannot override it.
 See [authentication](../README.en.md#workspaces-and-permissions) for scopes and
 [the client guide](../README.en.md#conversational-behavior) for chat flows.
 
+## Complete payloads
+
+[Tool payload schemas and examples](tool-payloads.json) documents every tool's
+complete input and response schema, request/response examples, annotations and
+REST route or workflow. Shared response objects use `$defs` references. Tests
+check every input schema against the advertised catalog and validate examples.
+The examples use synthetic contacts and an actual synthetic PDF fixture.
+
+MCP calls use `tools/call` with `{name,arguments}`. Successful JSON results carry
+the same JSON in text and `structuredContent`. REST response envelopes are
+unwrapped. Lists retain `{data,meta?}`. Document deletion returns text. Failures
+use `isError: true`, preserving API status/message and any authentication
+challenge. Optional response fields depend on resource state and permissions.
+
+## Costs within the signing flow
+
+Set `estimate_only: true` on `assinafy_send_pdf_for_signature`,
+`assinafy_create_assignment`, `assinafy_create_document_from_template`, or
+`assinafy_resend_notification` to receive `{cost_estimate: {...}}` without sending.
+No separate cost tools are registered. Check `has_sufficient_resources`,
+`blocking_reason`, `total_credits`, balances and breakdown before sending.
+The API determines current costs and rechecks resources at actual creation.
+
+The PDF preview validates and uploads the PDF, waits for processing, and returns
+`{document,cost_estimate}`. It creates no contacts or invitations. Retain its ID
+and send with `assinafy_create_assignment`; uploading again creates a duplicate.
+Assignment previews require `document_id`, `method` and signing choices; signer
+IDs are optional for previews. Collect previews also require `entries` but do not
+read page geometry. Actual collect sends require `documents:read` to check bounds.
+Template previews require `template_id` and one `role_id` per signer; name/email
+or contact ID is optional for this preview and no contact is created. Reminder
+previews require the same document, assignment and signer IDs as a reminder.
+Send through the same tool with `estimate_only` false/omitted after checking the
+result, using the prepared document rather than rerunning the PDF upload.
+
+## Biometric and certificate verification
+
+Choose `DigitalCertificate` for the signer's own ICP-Brasil A1/A3 certificate,
+or `IdDocumentFaceMatchBasic` for ID photos and liveness. The signer completes
+these checks in Assinafy; the MCP does not handle private certificate keys or
+perform a human signature. Configure `government_id` on the contact first.
+Certificate signers must be alone in their signing step.
+
+If biometric verification needs manual review, `identity_verification_status`
+shows `InReview` on the assignment signer. After all signatures, the document
+waits at `pending_identity_review` until the account reviews it in Assinafy.
+Approval can release certification; rejection cancels the document and sends
+cancellation notices. The existing document/status tools show these states.
+
+## Account webhooks
+
+Configure account webhooks in Assinafy. Paid plans support up to three endpoints;
+other accounts have one. Create with signing enabled and store the one-time
+secret securely. OAuth applications cannot retrieve or rotate it later; a lost
+secret requires an explicitly authorized delete/recreate in the account's
+integration. There are no account-webhook administration tools in this catalog.
+
+Receivers verify Standard Webhooks `webhook-id`, `webhook-timestamp` and
+`webhook-signature` over the exact raw body: decode the key after `whsec_`,
+compute HMAC-SHA256 of `id.timestamp.body`, base64-encode it and compare against a
+`v1,` signature in constant time. Reject timestamps outside five minutes and
+deduplicate the delivery ID. Body timestamps are Unix seconds. See the
+[official contract](https://api.assinafy.com.br/v1/docs). MCP Events use their
+own callbacks and do not modify these account endpoints.
+
 ## Find documents and check progress
 
 | Tool | Required | Optional |
 |---|---|---|
-| `assinafy_list_documents` | None | `page`, `per_page`, `search`, `sort`, `status`, `account_id` |
+| `assinafy_list_documents` | None | `page`, `per_page`, `search`, `sort`, `status`, `method`, `tags`, `account_id` |
 | `assinafy_get_document` | `document_id` | None |
 | `assinafy_list_document_activities` | `document_id` | None |
 | `assinafy_list_whatsapp_notifications` | `document_id`, `assignment_id` | None |
@@ -140,11 +205,15 @@ from `assinafy_list_fields`. Every placement contains `signer_id`, `field_id` an
 the server checks page readiness and bounds before creating the assignment.
 
 Signers also accept `verification_method` (`Email`, `Whatsapp`,
-`DigitalCertificate`), `notification_methods` (`Email`, `Whatsapp`) and `step`.
+`DigitalCertificate`, `IdDocumentFaceMatchBasic`), `notification_methods` (`Email`, `Whatsapp`) and `step`.
 When ordering is used, every signer supplies a step; steps are contiguous from 1,
 and people on the same step sign in parallel. Assinafy validates eligibility and
 signing order. Certificate signers must be alone in their step, and their CPF/CNPJ
-must already be registered on the contact in Assinafy; this server never collects it.
+must be saved on the contact with `assinafy_create_signer` or `assinafy_update_signer`
+when authorized. Biometric verification (`IdDocumentFaceMatchBasic`) needs its
+account feature and a valid CPF. Email verification pairs with Email notification;
+Whatsapp pairs with Whatsapp. Certificate/biometric verification accepts either
+channel. Exactly one notification method is allowed; omitted settings are inferred.
 
 ```json
 {"document_id":"DOCUMENT_ID","method":"virtual","signers":[{"id":"SIGNER_ID"}]}
@@ -164,7 +233,7 @@ Input:
 | `signers[].id` | no | Existing signer ID; give this **or** `full_name` and `email`, never both |
 | `signers[].full_name` | no | Contact name; required when `id` is omitted |
 | `signers[].email` | no | Contact email; required when `id` is omitted. An exact match is reused |
-| `signers[].verification_method` | no | `Email`, `Whatsapp`, or `DigitalCertificate`; rejected otherwise |
+| `signers[].verification_method` | no | `Email`, `Whatsapp`, `DigitalCertificate`, or `IdDocumentFaceMatchBasic`; rejected otherwise |
 | `signers[].notification_methods` | no | At most one channel: `Email` or `Whatsapp`. Assinafy infers verification when it is omitted |
 | `signers[].step` | no | Signing order, 1 or greater, contiguous from 1; all entries must set it if any does |
 | `name` | no | Generated document name |
@@ -210,15 +279,15 @@ Resolve exact contacts and clarify ambiguous matches before sending.
 
 | Tool | Required | Optional |
 |---|---|---|
-| `assinafy_create_signer` | `full_name` | `email`, `whatsapp_phone_number`, `account_id` |
-| `assinafy_update_signer` | `signer_id` and at least one of `full_name`, `email`, `whatsapp_phone_number` | `account_id` |
+| `assinafy_create_signer` | `full_name` | `email`, `whatsapp_phone_number`, `government_id`, `account_id` |
+| `assinafy_update_signer` | `signer_id` and at least one of `full_name`, `email`, `whatsapp_phone_number`, `government_id` | `account_id` |
 
 Saving a contact sends no signing request. Standalone creation may return a
 conflict; look up the existing contact before retrying. Contacts are shared in
 the workspace. Assinafy restricts edits to channels already verified on an
 in-flight document. Updating an unverified channel invalidates old links/codes;
-use an authorized reminder only after a successful correction. Government IDs
-(CPF/CNPJ) are not accepted; they are managed in Assinafy itself.
+use an authorized reminder only after a successful correction. Save CPF/CNPJ in `government_id` only when authorized for certificate or biometric
+verification. Assinafy normalizes and validates the value; treat it as sensitive data.
 
 ## Discover saved templates
 
@@ -284,8 +353,8 @@ read-only: a card's buttons call the regular tools above, under the same OAuth g
 | Tool | Input | Card | Text summary |
 |---|---|---|---|
 | `assinafy_show_document` | `document_id` | Status, who signed, who is pending, expiry; **Remind** the next pending signer and **Refresh** | Status, signed count, pending names, expiry |
-| `assinafy_review_signature_request` | The `assinafy_create_assignment` arguments | Recipients with emails and verification, expiry; one **Send** button | Recipients and “nothing has been sent” |
-| `assinafy_place_fields` | The `assinafy_create_assignment` arguments except `method` and `entries` | Fullscreen editor: place signature, initials, date and custom fields on each page, then **Send** with `method: "collect"` | Page IDs and sizes in 150-DPI pixels and field IDs, to build `entries` |
+| `assinafy_review_signature_request` | The `assinafy_create_assignment` sending arguments (without `estimate_only`) | Recipients with emails and verification, expiry; one **Send** button | Recipients and “nothing has been sent” |
+| `assinafy_place_fields` | The `assinafy_create_assignment` arguments except `method`, `entries` and `estimate_only` | Fullscreen editor: place signature, initials, date and custom fields on each page, then **Send** with `method: "collect"` | Page IDs and sizes in 150-DPI pixels and field IDs, to build `entries` |
 
 Send buttons first recheck the document and stop if it already has a signature
 request, so a reloaded card or a send from the chat cannot duplicate invitations.
@@ -297,8 +366,8 @@ no assignment; placements are validated against each page's bounds before sendin
 
 Grouped tools that took an `action` argument are no longer registered. Refresh
 the client's tool catalog, call the matching tool and drop `action`; the other
-arguments and result shapes are unchanged, except that `assinafy_update_signer`
-no longer accepts `government_id`.
+arguments and result shapes are unchanged. Signer creation and updates accept
+`government_id` for supported identity verification methods.
 
 | Previous tool and `action` | Current tool |
 |---|---|

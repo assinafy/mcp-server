@@ -195,7 +195,7 @@ do not repeatedly ask for the same confirmation.
 |---|---|
 | “Send this PDF to Ana.” | `assinafy_send_pdf_for_signature` after resolving the authorized contact |
 | “Use our NDA template for this customer.” | Find the template, match roles and fields, validate values, then `assinafy_create_document_from_template` |
-| “Has Ana signed the agreement?” | `assinafy_list_documents`, then `assinafy_get_document`; report the pending people and current state |
+| “Has Ana signed the agreement?” | Find the document, then inspect it with `assinafy_get_document`; report the pending people and current state |
 | “Remind Ana.” | Inspect the current assignment, then `assinafy_resend_notification` for that signer |
 | “Get the signed copy.” | Inspect certification and artifact availability, then `assinafy_download_document` with `artifact: "certificated"` |
 
@@ -266,6 +266,7 @@ reason supplied by Assinafy. The documented lifecycle is:
 | `uploading`, `uploaded`, `metadata_processing` | Processing is incomplete. Recheck later; collect assignments need prepared page metadata. |
 | `metadata_ready` | Inspect or rename the PDF, then prepare its signature request. |
 | `pending_signature` | Inspect pending signers, signing order, delivery history, and expiration. |
+| `pending_identity_review` | All signatures are complete; finish the manual identity review in Assinafy before certification |
 | `certificating` | All signatures may be present while final artifacts are still being generated. |
 | `certificated` | Download the available signed artifacts. This state is not deletable under the documented API. |
 | `expired` | Inspect the assignment and decide whether to update its expiration. Assinafy validates whether the update is allowed. |
@@ -332,10 +333,11 @@ format illustration. Read the updated assignment to confirm the resulting date.
 Do not assume that updating expiration also sent a new invitation.
 
 Find contacts through `assinafy_list_signers` or `assinafy_get_signer`.
-`assinafy_update_signer` supports `full_name`, `email` and `whatsapp_phone_number`.
-A contact is shared within the workspace, so review the intended change before
-applying it. Assinafy blocks changes to a channel already verified on an
-in-flight document. Changing an unverified channel invalidates old access
+`assinafy_update_signer` supports `full_name`, `email`, `whatsapp_phone_number`
+and `government_id`. Save CPF/CNPJ only when authorized for certificate or
+biometric verification. A contact is shared within the workspace, so review the intended
+change before applying it. Assinafy blocks changes to a channel already verified
+on an in-flight document. Changing an unverified channel invalidates old access
 links/codes; after a successful correction, use an authorized resend to deliver
 the replacement link. Preserve and report an upstream refusal.
 
@@ -401,15 +403,21 @@ Example `assinafy_create_assignment` arguments:
 
 The assignment tool supports `virtual` and `collect`, optional `copy_receivers`
 (signer IDs), `message`, `expires_at`, and ordered signing through `step`.
-Verification methods are `Email`, `Whatsapp`, and `DigitalCertificate`;
-notifications use the documented Email/WhatsApp channels. WhatsApp needs the
-appropriate contact and subscription; certificate signing needs the enabled
-account feature and the signer's CPF/CNPJ already registered on the contact in
-Assinafy; this server never collects it. Assinafy validates these requirements. No response carries a cost or a balance: creating a document
-and sending a WhatsApp notification draw on the workspace's document allowance and
-notification credits at the published rates, and the remaining allowance is visible
-in Assinafy rather than through this server. Use the user's existing authorization for the requested action; ask only for missing
-recipient or document choices, and never repeat a call because progress looks unchanged.
+Verification methods are `Email`, `Whatsapp`, `DigitalCertificate`, and
+`IdDocumentFaceMatchBasic`; exactly one compatible Email/WhatsApp notification
+channel is allowed per signer. WhatsApp needs the appropriate contact and
+subscription. Certificate and biometric verification need an enabled account
+feature and the required CPF/CNPJ saved on the contact through an authorized
+`government_id` update. Biometric verification requires a valid CPF. Assinafy
+validates eligibility and current resources when sending.
+
+Use `estimate_only: true` to preview costs and balances through the existing
+signing tools. A new-PDF preview uploads and retains its document; reuse that ID
+with `assinafy_create_assignment` to send. Other previews create no records or
+messages. See [cost previews](#cost-previews-and-identity-verification) and the
+[complete request/response payloads](docs/tool-payloads.json). Use the user's
+existing authorization for the requested action; ask only for missing recipient
+or document choices, and never repeat a call because progress looks unchanged.
 
 For ordered signing, every signer must specify a step if any does; steps must be
 contiguous from 1. People in one step sign in parallel. A digital-certificate
@@ -608,3 +616,19 @@ If login reports `invalid_target`, `invalid_client`, or missing resource metadat
 confirm that the server URL is exactly `https://mcp.assinafy.com.br/mcp` and that
 your client is up to date. If the error persists, contact Assinafy support with
 the client name, version, and error message. Do not include tokens or credentials.
+
+## Cost previews and identity verification
+
+Use `estimate_only: true` in the existing PDF, assignment, template and reminder
+tools to preview balances and cost breakdowns before sending. A PDF preview
+uploads and retains the document; reuse that ID to send. Other previews create
+no records or messages. Estimate results do not reserve credits; Assinafy checks
+resources again when sending. See [the signing flow and payloads](docs/tools.md#costs-within-the-signing-flow).
+
+Biometric verification uses `IdDocumentFaceMatchBasic` in the same assignment or
+template signer settings. Save an authorized government ID on the contact first.
+Signers complete ID/liveness checks in Assinafy. Manual review is completed there
+by the account; document tools expose `InReview` and `pending_identity_review`.
+Account webhooks are configured in Assinafy and are independent of MCP Events.
+See [verification](docs/tools.md#biometric-and-certificate-verification) and
+[webhook signing](docs/tools.md#account-webhooks).
