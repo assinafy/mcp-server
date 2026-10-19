@@ -426,6 +426,10 @@ CPF/CNPJ salvo no contato por uma atualização autorizada de `government_id`.
 Biometria exige CPF válido. A Assinafy valida a elegibilidade e os recursos
 atuais no envio.
 
+`DigitalCertificate` exige `method: "virtual"`. Uma chamada `collect` é recusada
+antes da estimativa ou do envio com
+`digital_certificate_requires_virtual`.
+
 Use `estimate_only: true` nas ferramentas de assinatura para consultar custos e
 saldos antes do envio. A prévia de um PDF novo envia e preserva o documento;
 reutilize seu ID com `assinafy_create_assignment` para solicitar assinaturas.
@@ -523,6 +527,11 @@ valida todas as entradas e a ordem completa antes de criar contatos. Se uma entr
 usar `step`, todas usam; as etapas são contíguas desde 1 e quem assina com certificado
 fica sozinho na etapa. A Assinafy ainda valida os papéis, então uma falha posterior
 pode deixar contatos recém-criados.
+
+Templates com campos posicionados usam `collect` e não aceitam
+`DigitalCertificate`. O servidor confere templates com certificado e retorna
+`digital_certificate_requires_virtual` antes de estimar custos, criar contatos,
+gerar o documento ou enviar convites.
 
 A chamada aceita nome personalizado, mensagem, expiração, `tags` (**nomes** de
 tag, mesclados com os padrões do template) e `editor_fields` com

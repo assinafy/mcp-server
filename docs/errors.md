@@ -120,6 +120,12 @@ prefix:
 Document ID is required
 ```
 
+Coded validation failures prefix the message with a stable machine-readable code:
+
+```
+digital_certificate_requires_virtual: DigitalCertificate signers require method virtual
+```
+
 A failure of the tool's input schema is raised by the MCP SDK before the handler
 runs, and is prefixed differently:
 

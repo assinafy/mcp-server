@@ -413,6 +413,10 @@ feature and the required CPF/CNPJ saved on the contact through an authorized
 `government_id` update. Biometric verification requires a valid CPF. Assinafy
 validates eligibility and current resources when sending.
 
+`DigitalCertificate` requires `method: "virtual"`. A direct `collect` request is
+rejected before estimation or sending with
+`digital_certificate_requires_virtual`.
+
 Use `estimate_only: true` to preview costs and balances through the existing
 signing tools. A new-PDF preview uploads and retains its document; reuse that ID
 with `assinafy_create_assignment` to send. Other previews create no records or
@@ -501,6 +505,11 @@ The server validates every entry and the complete signing order before creating
 contacts. When one entry has a step, all do; steps are contiguous from 1, and a
 certificate signer is alone in its step. Role eligibility is still checked by
 Assinafy, so a later failure can leave newly created contacts behind.
+
+Templates with placed fields resolve to `collect` and cannot use
+`DigitalCertificate`. The server preflights certificate templates and returns
+`digital_certificate_requires_virtual` before estimating cost, creating contacts,
+generating the document, or sending invitations.
 
 The call accepts a custom name, message, expiration, `tags` (tag **names**, merged
 with the template defaults), and `editor_fields` containing `{field_id,value}`.

@@ -206,6 +206,11 @@ from `assinafy_list_fields`. Every placement contains `signer_id`, `field_id` an
 `fontFamily` and `backgroundColor`). Geometry uses 150-DPI page-image pixels;
 the server checks page readiness and bounds before creating the assignment.
 
+`DigitalCertificate` signers require `method: "virtual"`. The server rejects
+`collect` before both cost estimation and assignment creation with the stable
+code `digital_certificate_requires_virtual`, so no unusable invitation is sent
+or charged.
+
 Signers also accept `verification_method` (`Email`, `Whatsapp`,
 `DigitalCertificate`, `IdDocumentFaceMatchBasic`), `notification_methods` (`Email`, `Whatsapp`) and `step`.
 When ordering is used, every signer supplies a step; steps are contiguous from 1,
@@ -256,6 +261,11 @@ If one entry sets `step`, all entries must; steps are contiguous from 1, and a
 DigitalCertificate signer must be alone in its step. Assinafy still validates role
 eligibility. Template creation is not transactional: a later upstream failure can
 leave newly created contacts.
+
+A template containing any placed field uses a `collect` assignment and therefore
+cannot use a `DigitalCertificate` signer. The server inspects certificate templates
+before cost estimation or creation and returns
+`digital_certificate_requires_virtual` without sending or charging.
 
 Discover roles and placements with `assinafy_list_templates`. Match configurable
 field names or placement labels using `assinafy_list_fields`; ambiguous matches
