@@ -47,7 +47,10 @@ See [Claude connector authentication](https://claude.com/docs/connectors/buildin
 
 ## ChatGPT
 
-Configure a remote MCP connection with OAuth and the Assinafy URL. Select CIMD
+Install [Assinafy from the ChatGPT plugin
+directory](https://chatgpt.com/plugins/plugin_asdk_app_6acbe48b99f881919f32df8e549c1efa),
+then connect and complete the Assinafy sign-in and workspace selection. To add the
+server by hand, configure a remote MCP connection with OAuth and the Assinafy URL. Select CIMD
 if a registration choice is offered, leave optional client credentials unset,
 and complete the Assinafy sign-in and workspace selection. See
 [ChatGPT authentication](https://developers.openai.com/plugins/build/auth).
