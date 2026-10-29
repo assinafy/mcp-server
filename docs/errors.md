@@ -8,10 +8,19 @@ connecting, listing tools and the public verification tool answer without one.
 
 ## Authentication and transport
 
-If login reports missing resource metadata, `invalid_target` or `invalid_client`,
-confirm the exact server URL `https://mcp.assinafy.com.br/mcp` and update your
-client. If it persists, contact Assinafy support with the client name, version and
-error message. Keep credentials and authorization codes out of support reports.
+If `codex mcp login assinafy` reports `Protected resource metadata missing required
+resource field`, check the deployed server version. Versions before `v3.0.1`
+returned a tool manifest at `GET /mcp` without OAuth metadata, which Codex treated
+as an incomplete discovery document. Deploy `v3.0.1` or later and retry the same
+login command; no change to the client's MCP URL or credentials is required.
+
+If login returns `invalid_target`, the authorization server has rejected the
+MCP resource `https://mcp.assinafy.com.br/mcp`. This was reproduced in production
+with both Codex and Claude Code on 2026-09-19, after successful discovery. Ask the
+Assinafy operator to enable that exact resource in the provider's accepted
+audiences, then retry login. Keep the MCP URL unchanged. Consent and token
+exchange cannot complete until the provider accepts the resource; reinstalling
+the client or supplying API credentials does not resolve this rejection.
 
 | HTTP status | Meaning and recovery |
 |---|---|
@@ -23,7 +32,7 @@ error message. Keep credentials and authorization codes out of support reports.
 | 415 | A POST to `/mcp` whose `Content-Type` is not `application/json` |
 | 413 | A verified request exceeds the 40 MiB limit. An anonymous request is capped at 64 KiB; a bearer token is verified after at most 64 KiB plus one byte, before buffering a larger body |
 | 429 | Assinafy is rate-limiting authorization checks; honour the `Retry-After` header |
-| 503 | The authentication service is unavailable, or it refused or withheld a permission your grant already holds, which consenting again cannot change; retry later and contact Assinafy support if it persists |
+| 503 | Introspection/exchange is unavailable, malformed, redirected, rejected the MCP service credentials/target, or refused or withheld a scope the grant already holds. That last is the MCP service client's policy, which consenting again cannot change. Retry transient failures and ask the operator to check persistent ones |
 
 The HTTP authorization responses above carry no body beyond the status text, so
 no Assinafy description or credential leaks through them. Upstream messages do
@@ -41,19 +50,27 @@ server's short-lived API token as it goes; if Assinafy refuses a renewal, the
 tool stops with such an error instead of retrying. Inspect a retained document
 ID before retrying a partially completed workflow.
 
-See [workspaces and permissions](../README.en.md#workspaces-and-permissions) for scope selection and reconnection.
+The server refuses to start if its introspection/exchange client settings are
+missing, issuer metadata lacks those capabilities, or a registered tool declares
+no scopes without being listed as public. Resource registration alone does not
+satisfy the new token-separation contract; deploy the API capabilities and inject
+the operator credentials before upgrading from v3.0.1.
+`/healthz` reports only that this process is serving; it is
+deliberately independent of Assinafy. See [authentication](../README.en.md#workspaces-and-permissions).
 
-## ChatGPT document monitoring
+## MCP Events
 
-When ChatGPT Work watches a document through
-[MCP Events](https://developers.openai.com/plugins/build/mcp-events), subscription
-errors use these JSON-RPC codes:
+`events/subscribe` and `events/unsubscribe` return JSON-RPC errors (see
+[Events](events.md)):
 
-| Code | Meaning | Action |
+| Code | Meaning | Client action |
 |---|---|---|
-| `-32015` | ChatGPT's callback could not be verified (`data.reason`: `invalid_url`, `timeout`, `connection_failed` or `challenge_failed`) | Retry later; ChatGPT manages its own callback |
-| `-32602` | Invalid request, such as an unknown event, a document outside the workspace, or the subscription limit | Correct the request |
-| `-32603` | Temporary condition | Retry with backoff |
+| `-32015` | Callback verification failed; `data.reason` is `invalid_url`, `timeout`, `connection_failed` or `challenge_failed` | Fix the callback (HTTPS, public, replies exactly `{"challenge": …}`) and subscribe again |
+| `-32602` | Invalid request: unknown event, bad `document_id`, unsupported delivery, invalid secret, non-null `cursor`, the document is not accessible in the workspace, or the subscription limit is reached | Correct the request; it will not succeed unchanged |
+| `-32603` | Temporary: Events are starting, Assinafy is unavailable, the grant has no `grant_id`, the store could not be saved, or the subscription changed or was unsubscribed concurrently | Retry with backoff; refresh before `refreshBefore` |
+
+Webhook deliveries that fail permanently, or after five attempts, are abandoned and
+logged; the subscription keeps monitoring.
 
 ## Error types
 
@@ -164,3 +181,19 @@ document mutation or notification. A successful signer-contact correction may
 invalidate earlier access links; use an authorized resend after checking the
 updated document. Assinafy rejects changes to channels already verified on an
 in-flight document.
+
+## Contract conflicts and reminders
+
+CLM errors preserve the API's status and message. `403` can mean the workspace
+plan does not include tracking; additional consent will not change a plan.
+`409 ContractChanged` means the supplied `updated_at` is stale: read the contract
+or amendment again, review the change, then submit an authorized update.
+Never remove the precondition merely to force the write through.
+A repeat renewal can return `400` because its source `term` is no longer current.
+On an uncertain write, inspect current terms and activities before proceeding.
+
+Lifecycle reminders are scheduled by Assinafy, follow member notification
+preferences and pause without a tracking plan. `contract.activity` only observes
+new activities while its client keeps authorization and subscriptions refreshed.
+It does not send another reminder, guarantee delivery after retries are exhausted,
+or authorize an automatic contract mutation.

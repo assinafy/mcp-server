@@ -1,7 +1,7 @@
 # Conversational tool reference
 
-The server exposes **27 tools**, one per operation. Each tool takes only its own
-arguments; none takes an `action`. Input schemas are strict: missing required
+The server exposes **29 tools**. Signing tools retain their individual operations;
+two CLM tools group fixed read and write actions separately. Input schemas are strict: missing required
 fields and unknown arguments are rejected before any API call.
 
 | Tool | Purpose | Read-only | Destructive | Idempotent | Open-world |
@@ -16,7 +16,7 @@ fields and unknown arguments are rejected before any API call.
 | `assinafy_create_assignment` | Request signatures on an existing document | no | no | no | yes |
 | `assinafy_create_document_from_template` | Generate a document from a template and send it | no | no | no | yes |
 | `assinafy_resend_notification` | Remind a pending signer | no | no | no | yes |
-| `assinafy_set_assignment_expiration` | Change the deadline | no | no | no | no |
+| `assinafy_set_assignment_expiration` | Change the deadline | no | yes | no | no |
 | `assinafy_list_signers` | Find contacts | yes | no | yes | no |
 | `assinafy_get_signer` | Read one contact | yes | no | yes | no |
 | `assinafy_create_signer` | Create a contact | no | no | no | no |
@@ -34,8 +34,12 @@ fields and unknown arguments are rejected before any API call.
 | `assinafy_review_signature_request` | Review before sending ([visual card](#visual-cards)) | yes | no | yes | no |
 | `assinafy_place_fields` | Field placement editor ([visual card](#visual-cards)) | yes | no | yes | no |
 
-Every tool declares all four MCP annotations. Only the four tools that send
-messages to people are open-world. An explicit user request already authorizes
+| `assinafy_browse_contracts` | List, inspect or view a contract family and its MCP app | yes | no | yes | no |
+| `assinafy_update_contract` | Set terms, link amendments, renew or terminate tracking | no | yes | no | yes |
+
+Every tool declares all four MCP annotations. The four signing tools that send
+messages and the contract-write tool are open-world: contract changes can also
+trigger lifecycle emails and webhooks. An explicit user request already authorizes
 the operation it names; ask only for missing details, ambiguous matches, or a new
 operation outside that request.
 
@@ -343,8 +347,7 @@ There is no automatic field-name resolver; match IDs using discovered metadata.
 
 Download signed artifacts only after certification and availability are confirmed.
 Binary responses are capped at 64 MiB before base64 encoding. Download only the
-bytes needed; base64 appears only in `structuredContent`, with a short text summary.
-Use the client's file tools to save it without printing base64.
+bytes needed; use the client's file tools to save them without printing base64.
 
 ## Delete or verify
 
@@ -412,8 +415,8 @@ Collection and empty fixed-operation responses use `{data: ...}` with pagination
 `meta` where available. Binary bytes are base64 inside an object. Upstream errors
 use `isError: true` and retain Assinafy's status/message where supplied.
 
-The fixed operations use only the configured methods, routes, query parameters and
-body fields from the [Assinafy API](https://api.assinafy.com.br/v1/docs). Callers cannot
+The fixed operations use only methods, routes, query parameters and body fields from
+[the documented schemas](tool-payloads.json). Callers cannot
 supply arbitrary URLs, HTTP methods or credentials. Path identifiers reject
 empty values, separators, percent escapes, query/fragment characters, traversal and control
 characters. The MCP SDK validates all input schemas.
@@ -421,4 +424,71 @@ characters. The MCP SDK validates all input schemas.
 Writes are never retried automatically. After an uncertain send, inspect the
 retained document before deciding what to do. Use `assinafy_create_assignment`
 only if no assignment exists and its state permits signing. See [errors](errors.md)
-for recovery and the [Assinafy API reference](https://api.assinafy.com.br/v1/docs) for capabilities outside this catalog.
+for recovery and [the public API](https://api.assinafy.com.br/v1/docs) for capabilities outside this catalog.
+
+## Contract management (CLM)
+
+`assinafy_browse_contracts` is read-only. `action: list` accepts document-name
+`search`, contract `status` (comma-separated), `counterparty`, end-date ranges,
+`ending_within_days` (0–3650, inclusive, Brasília calendar days), external-system
+references, sorting and pagination. Use `expand: document` for document names.
+`action: get` with a `document_id` reads that contract or amendment; `related`
+reads its root contract with all amendments. List filters are rejected on these
+single-document actions. Results include the same API data under
+`{view:"contracts",request,result}` for both text and the MCP app. The app can
+filter upcoming contracts, page results, inspect the family, and return a proposed
+edit, renewal or termination to chat for review. Merely opening it writes nothing.
+
+`assinafy_update_contract` has three fixed actions, all requiring
+`documents:write` and a plan with contract tracking:
+
+- `set`: send `document_id` and a nonempty `terms` object. Only supplied attributes
+  change. On existing terms or links include their `terms.updated_at` from `get`;
+  omit it when creating terms or a first link. Nulls follow the API's clearing
+  rules; `external_references` replaces the complete list. Setting
+  `notice_period_days` configures the renewal notice; `auto_renew` authorizes
+  Assinafy's automatic renewal. Resolve `owner_id` to a known workspace member
+  in Assinafy; never guess it from a signer/contact ID.
+- `renew`: send the current `term` and `updated_at`, plus optional `end_date` and
+  `value`. The MCP requires both guards, including for an explicit end date.
+  Assinafy advances the term, reopens an expired contract and refuses a terminated
+  one. Reusing the same request cannot renew twice.
+- `terminate`: send the current `updated_at` and optional `reason`. Closes contract
+  tracking and stops lifecycle alerts. It does not cancel a signing assignment.
+
+Read first, resolve ambiguous documents, and change only what the user authorized.
+A `409` requires a new read and review of the concurrent change; do not silently
+replace the precondition. Writes are never automatically retried. A timeout may
+mean the change succeeded: inspect the contract and document activities first.
+
+To record a change through a signed instrument, upload a separate document using
+the existing signing tools, then `set` its `terms.parent_document_id`,
+`relation_type` (`amendment`, `renewal`, `termination`) and the allowed delta.
+Assinafy applies it after certification, in signing order. Inspect `apply_error`
+and `status` if a certificated instrument is still pending. A pending amendment's
+null delta field removes that key; `parent_document_id: null` unlinks it. Use
+that document's own `updated_at`, not its parent's. No MCP call performs a human
+signature or drafts legal terms automatically.
+
+Assinafy's hourly lifecycle owns notice-period alerts, 45/30-day expiry warnings,
+expiry and auto-renewal on the day after the end date, using Brasília time.
+Emails follow the owner's or active document creator's notification preferences.
+A lapsed tracking plan pauses that lifecycle; reads still work. MCP creates no
+second scheduler or email service. Subscribe to `contract.activity` for new
+upstream alerts and changes; see [Events](events.md). Subscription delivery does
+not itself authorize a renewal, termination, or another email. Contract dates are
+independent of signature-request deadlines.
+
+Example: renew terms already read with `get`:
+
+```json
+{
+  "action": "renew",
+  "document_id": "document-example",
+  "term": 1,
+  "updated_at": "2026-10-28T12:00:00Z"
+}
+```
+
+See the [public contract API](https://api.assinafy.com.br/v1/docs#tag/Contracts)
+and [complete payload schemas](tool-payloads.json).

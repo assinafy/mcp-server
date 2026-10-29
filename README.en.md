@@ -219,7 +219,7 @@ chat replies. Reads never send invitations. Preparation never sends invitations.
 
 ## Document flow
 
-The server provides 27 tools, one per operation. Your assistant
+The server provides 29 tools, including two grouped CLM tools. Your assistant
 chooses tools from the catalog; you describe what you want to do.
 See the [tool reference](docs/tools.md) for inputs and examples.
 
@@ -649,3 +649,28 @@ by the account; document tools expose `InReview` and `pending_identity_review`.
 Account webhooks are configured in Assinafy and are independent of MCP Events.
 See [verification](docs/tools.md#biometric-and-certificate-verification) and
 [webhook signing](docs/tools.md#account-webhooks).
+
+## Contracts, renewals and lifecycle reminders
+
+
+Use `assinafy_browse_contracts` with `action: list` to find contracts by name,
+counterparty, status or end date; add `status: active` and `ending_within_days: 30`
+for upcoming active contracts. `get` reads the selected document's terms or
+amendment, while `related` reads its whole family from the root. Compatible hosts
+render the MCP app with navigation and review actions; all clients get JSON/text.
+
+Use `assinafy_update_contract` only for authorized changes: `set` patches `terms`,
+`renew` starts the next term, and `terminate` ends tracking. Read first and reuse
+`updated_at`; renew also requires the current `term`. A conflict needs another
+read and review, not a blind retry. For changes that need a signed instrument,
+link a separate document with `parent_document_id` and `relation_type`, then use
+the existing signing tools. Assinafy applies it after certification.
+
+Set `notice_period_days`, `auto_renew` and `renewal_term_months` to configure
+Assinafy's lifecycle. It sends owner reminders and checks dates hourly in Brasília
+time. This is independent of signing deadlines and signer invitation reminders.
+An Events-capable client can subscribe to `contract.activity` for a document and
+keep its OAuth connection and subscription refreshed. Read current terms on each
+alert before suggesting action; an event is not authorization to renew, terminate
+or send another message. See [the full CLM workflow](docs/tools.md#contract-management-clm)
+and [subscription limitations](docs/events.md#contract-lifecycle-events).

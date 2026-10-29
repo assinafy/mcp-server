@@ -216,7 +216,7 @@ não enviam convites. Consulte [todas as ferramentas e entradas](docs/tools.md).
 
 ## Fluxo do documento
 
-O servidor oferece 27 ferramentas, uma por operação. Seu assistente
+O servidor oferece 29 ferramentas, incluindo duas para gestão de contratos. Seu assistente
 escolhe as ferramentas do catálogo; você descreve o que quer fazer.
 Consulte a [referência de ferramentas](docs/tools.md) para entradas e exemplos.
 
@@ -677,7 +677,31 @@ certificado fica sozinho na etapa de assinatura.
 Configure webhooks de conta na Assinafy, independentemente de MCP Events.
 Planos pagos aceitam até três endpoints. Salve o segredo retornado na criação
 com assinatura habilitada; aplicativos OAuth não podem recuperá-lo nem
-rotacioná-lo depois. O catálogo continua com exatamente 27 ferramentas, sem
+rotacioná-lo depois. O catálogo continua com 29 ferramentas, sem
 ferramentas separadas para custos, biometria ou administração de webhooks.
 Veja [verificação](docs/tools.md#biometric-and-certificate-verification) e
 [assinatura de webhooks](docs/tools.md#account-webhooks).
+
+## Contratos, renovações e lembretes
+
+Peça “Quais contratos ativos vencem nos próximos 30 dias?” ou “Revise a renovação
+deste contrato”. `assinafy_browse_contracts` consulta contratos (`list`), termos ou
+aditivos (`get`) e a família completa (`related`). Clientes compatíveis exibem o
+navegador de contratos; os demais recebem os mesmos dados em texto.
+
+`assinafy_update_contract` registra termos (`set`), inicia a próxima vigência
+(`renew`) ou encerra o acompanhamento (`terminate`), conforme a autorização do
+usuário. Leia antes e reutilize `updated_at`; a renovação também exige o `term`
+atual. Em conflito, consulte novamente e revise a alteração. Não repita escritas
+às cegas. Para mudanças que exigem assinatura, vincule um documento separado por
+`parent_document_id` e `relation_type` e use o fluxo de assinatura existente.
+
+A Assinafy executa os avisos de renovação, alertas de vencimento, e-mails ao
+responsável e renovação automática no ciclo horário, pelo calendário de Brasília.
+Configure `notice_period_days`, `auto_renew` e `renewal_term_months` conforme
+autorizado. Esses prazos são diferentes do prazo para assinar o documento.
+Clientes compatíveis podem acompanhar `contract.activity`, mantendo a conexão
+OAuth e a inscrição renovadas. Um evento não autoriza renovar, encerrar ou enviar
+outra mensagem. Alterações exigem um plano com gestão de contratos; consultas
+continuam disponíveis sem ele. Veja [o fluxo de contratos](docs/tools.md#contract-management-clm)
+e [MCP Events](docs/events.md#contract-lifecycle-events).

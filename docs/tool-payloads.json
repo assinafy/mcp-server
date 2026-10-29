@@ -2019,9 +2019,9 @@
     },
     {
       "name": "assinafy_set_assignment_expiration",
-      "description": "Change when an existing signature request expires, using an RFC 3339 timestamp. Assinafy may refuse for requests that already expired.",
+      "description": "Replace the deadline of an existing signature request with an RFC 3339 timestamp at least one hour in the future. A shorter deadline ends signing when it passes; Assinafy refuses expired or closed requests.",
       "annotations": {
-        "destructiveHint": false,
+        "destructiveHint": true,
         "idempotentHint": false,
         "openWorldHint": false,
         "readOnlyHint": false,
@@ -4126,6 +4126,1286 @@
       "api": {
         "workflow": true
       }
+    },
+    {
+      "name": "assinafy_browse_contracts",
+      "description": "Find contracts with action list and filters, read terms or an amendment with get, or read the root and its amendments with related. Resolve names before writes. Apps-capable hosts show a contract browser; other clients receive the same JSON. Contract lifecycle dates are separate from signing deadlines. Reads remain available when the tracking plan lapses.",
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true,
+        "title": "Browse contracts"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "list",
+              "get",
+              "related"
+            ]
+          },
+          "counterparty": {
+            "type": "string",
+            "description": "Part of the counterparty name, or its exact CPF/CNPJ."
+          },
+          "document_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "end_date_from": {
+            "type": "string",
+            "description": "Contracts ending on or after this date.",
+            "format": "date"
+          },
+          "end_date_to": {
+            "type": "string",
+            "description": "Contracts ending on or before this date.",
+            "format": "date"
+          },
+          "ending_within_days": {
+            "type": "integer",
+            "description": "Contracts ending from today (the API's calendar day, Brasília time) to that many days later, both included; `0` is today. Any status: add `status=active` for the ones still in force.",
+            "minimum": 0,
+            "maximum": 3650
+          },
+          "expand": {
+            "type": "string",
+            "description": "`document` embeds each contract's document.",
+            "enum": [
+              "document"
+            ]
+          },
+          "external_id": {
+            "type": "string",
+            "description": "ID of an external reference in that system."
+          },
+          "external_system": {
+            "type": "string",
+            "description": "System of an external reference, e.g. `hubspot`."
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number.",
+            "minimum": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "description": "Records per page (max 100).",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "search": {
+            "type": "string",
+            "description": "Part of the document's name."
+          },
+          "sort": {
+            "type": "string",
+            "description": "`end_date` or `updated_at`; prefix with `-` for descending (`-updated_at`, the default). Contracts without an end date come last either way.",
+            "enum": [
+              "end_date",
+              "-end_date",
+              "updated_at",
+              "-updated_at"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "Contract status; several, comma-separated, match any of them.",
+            "pattern": "^(draft|active|expired|terminated)(,(draft|active|expired|terminated))*$"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "account_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "const": "list"
+              },
+              "counterparty": {
+                "type": "string",
+                "description": "Part of the counterparty name, or its exact CPF/CNPJ."
+              },
+              "end_date_from": {
+                "type": "string",
+                "description": "Contracts ending on or after this date.",
+                "format": "date"
+              },
+              "end_date_to": {
+                "type": "string",
+                "description": "Contracts ending on or before this date.",
+                "format": "date"
+              },
+              "ending_within_days": {
+                "type": "integer",
+                "description": "Contracts ending from today (the API's calendar day, Brasília time) to that many days later, both included; `0` is today. Any status: add `status=active` for the ones still in force.",
+                "minimum": 0,
+                "maximum": 3650
+              },
+              "expand": {
+                "type": "string",
+                "description": "`document` embeds each contract's document.",
+                "enum": [
+                  "document"
+                ]
+              },
+              "external_id": {
+                "type": "string",
+                "description": "ID of an external reference in that system."
+              },
+              "external_system": {
+                "type": "string",
+                "description": "System of an external reference, e.g. `hubspot`."
+              },
+              "page": {
+                "type": "integer",
+                "description": "Page number.",
+                "minimum": 1
+              },
+              "per_page": {
+                "type": "integer",
+                "description": "Records per page (max 100).",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "search": {
+                "type": "string",
+                "description": "Part of the document's name."
+              },
+              "sort": {
+                "type": "string",
+                "description": "`end_date` or `updated_at`; prefix with `-` for descending (`-updated_at`, the default). Contracts without an end date come last either way.",
+                "enum": [
+                  "end_date",
+                  "-end_date",
+                  "updated_at",
+                  "-updated_at"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "description": "Contract status; several, comma-separated, match any of them.",
+                "pattern": "^(draft|active|expired|terminated)(,(draft|active|expired|terminated))*$"
+              }
+            },
+            "required": [
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "account_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "const": "get"
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "action",
+              "document_id"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "account_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "const": "related"
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "action",
+              "document_id"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "requestExample": {
+        "action": "list",
+        "status": "active",
+        "ending_within_days": 30,
+        "sort": "end_date"
+      },
+      "structuredContentSchema": {
+        "type": "object",
+        "required": [
+          "view",
+          "request",
+          "result"
+        ],
+        "properties": {
+          "view": {
+            "const": "contracts",
+            "type": "string"
+          },
+          "request": {
+            "type": "object",
+            "properties": {
+              "account_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "list",
+                  "get",
+                  "related"
+                ]
+              },
+              "counterparty": {
+                "type": "string",
+                "description": "Part of the counterparty name, or its exact CPF/CNPJ."
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "end_date_from": {
+                "type": "string",
+                "description": "Contracts ending on or after this date.",
+                "format": "date"
+              },
+              "end_date_to": {
+                "type": "string",
+                "description": "Contracts ending on or before this date.",
+                "format": "date"
+              },
+              "ending_within_days": {
+                "type": "integer",
+                "description": "Contracts ending from today (the API's calendar day, Brasília time) to that many days later, both included; `0` is today. Any status: add `status=active` for the ones still in force.",
+                "minimum": 0,
+                "maximum": 3650
+              },
+              "expand": {
+                "type": "string",
+                "description": "`document` embeds each contract's document.",
+                "enum": [
+                  "document"
+                ]
+              },
+              "external_id": {
+                "type": "string",
+                "description": "ID of an external reference in that system."
+              },
+              "external_system": {
+                "type": "string",
+                "description": "System of an external reference, e.g. `hubspot`."
+              },
+              "page": {
+                "type": "integer",
+                "description": "Page number.",
+                "minimum": 1
+              },
+              "per_page": {
+                "type": "integer",
+                "description": "Records per page (max 100).",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "search": {
+                "type": "string",
+                "description": "Part of the document's name."
+              },
+              "sort": {
+                "type": "string",
+                "description": "`end_date` or `updated_at`; prefix with `-` for descending (`-updated_at`, the default). Contracts without an end date come last either way.",
+                "enum": [
+                  "end_date",
+                  "-end_date",
+                  "updated_at",
+                  "-updated_at"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "description": "Contract status; several, comma-separated, match any of them.",
+                "pattern": "^(draft|active|expired|terminated)(,(draft|active|expired|terminated))*$"
+              }
+            },
+            "required": [
+              "action"
+            ],
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "account_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "action": {
+                    "type": "string",
+                    "const": "list"
+                  },
+                  "counterparty": {
+                    "type": "string",
+                    "description": "Part of the counterparty name, or its exact CPF/CNPJ."
+                  },
+                  "end_date_from": {
+                    "type": "string",
+                    "description": "Contracts ending on or after this date.",
+                    "format": "date"
+                  },
+                  "end_date_to": {
+                    "type": "string",
+                    "description": "Contracts ending on or before this date.",
+                    "format": "date"
+                  },
+                  "ending_within_days": {
+                    "type": "integer",
+                    "description": "Contracts ending from today (the API's calendar day, Brasília time) to that many days later, both included; `0` is today. Any status: add `status=active` for the ones still in force.",
+                    "minimum": 0,
+                    "maximum": 3650
+                  },
+                  "expand": {
+                    "type": "string",
+                    "description": "`document` embeds each contract's document.",
+                    "enum": [
+                      "document"
+                    ]
+                  },
+                  "external_id": {
+                    "type": "string",
+                    "description": "ID of an external reference in that system."
+                  },
+                  "external_system": {
+                    "type": "string",
+                    "description": "System of an external reference, e.g. `hubspot`."
+                  },
+                  "page": {
+                    "type": "integer",
+                    "description": "Page number.",
+                    "minimum": 1
+                  },
+                  "per_page": {
+                    "type": "integer",
+                    "description": "Records per page (max 100).",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "search": {
+                    "type": "string",
+                    "description": "Part of the document's name."
+                  },
+                  "sort": {
+                    "type": "string",
+                    "description": "`end_date` or `updated_at`; prefix with `-` for descending (`-updated_at`, the default). Contracts without an end date come last either way.",
+                    "enum": [
+                      "end_date",
+                      "-end_date",
+                      "updated_at",
+                      "-updated_at"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "Contract status; several, comma-separated, match any of them.",
+                    "pattern": "^(draft|active|expired|terminated)(,(draft|active|expired|terminated))*$"
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "account_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "action": {
+                    "type": "string",
+                    "const": "get"
+                  },
+                  "document_id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "action",
+                  "document_id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "account_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "action": {
+                    "type": "string",
+                    "const": "related"
+                  },
+                  "document_id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "action",
+                  "document_id"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "result": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/DocumentContract"
+                    }
+                  },
+                  "meta": {
+                    "$ref": "#/$defs/PaginationMeta"
+                  }
+                }
+              },
+              {
+                "$ref": "#/$defs/DocumentContract"
+              },
+              {
+                "$ref": "#/$defs/DocumentContractAmendment"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "responseExample": {
+        "view": "contracts",
+        "request": {
+          "action": "list",
+          "status": "active",
+          "ending_within_days": 30,
+          "sort": "end_date"
+        },
+        "result": {
+          "data": [
+            {
+              "resource": "document_contract",
+              "document_id": "document-example",
+              "status": "active",
+              "counterparty_name": "Example Company",
+              "value": 1200.5,
+              "currency": "BRL",
+              "start_date": "2026-11-01",
+              "end_date": "2027-10-31",
+              "auto_renew": false,
+              "renewal_term_months": 12,
+              "notice_period_days": 30,
+              "term": 1,
+              "owner_id": null,
+              "metadata": null,
+              "external_references": [],
+              "amendments": [],
+              "created_at": "2026-10-28T12:00:00Z",
+              "updated_at": "2026-10-28T12:00:00Z"
+            }
+          ],
+          "meta": {
+            "current_page": 1,
+            "per_page": 20,
+            "last_page": 1,
+            "total": 1
+          }
+        }
+      },
+      "api": {
+        "operations": [
+          {
+            "action": "list",
+            "method": "GET",
+            "path": "/v1/accounts/{accountId}/contracts"
+          },
+          {
+            "action": "get",
+            "method": "GET",
+            "path": "/v1/accounts/{accountId}/documents/{documentId}/contract"
+          },
+          {
+            "action": "related",
+            "method": "GET",
+            "path": "/v1/accounts/{accountId}/documents/{documentId}/contract/related"
+          }
+        ]
+      }
+    },
+    {
+      "name": "assinafy_update_contract",
+      "description": "Manage an existing document’s CLM record: set creates/patches terms or links a signed amendment; renew starts the next term; terminate closes tracking. Requires a tracking plan. Read first: include terms.updated_at for existing terms or links; renew requires the current term and updated_at, terminate requires updated_at. A conflict needs a fresh read and user review, never blind retries. Only supplied terms change; external_references replaces the list; null can clear values or unlink a pending amendment. Assinafy owns auto-renewal and owner reminders; changes can trigger lifecycle emails/webhooks. These actions do not sign, send or cancel the document itself. Use only for changes the user authorized.",
+      "annotations": {
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true,
+        "readOnlyHint": false,
+        "title": "Update contract terms"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "set",
+              "renew",
+              "terminate"
+            ]
+          },
+          "document_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "end_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The new end date, after the current one. Absent, empty or `null`: the current end date plus the renewal term, stepped until it is in the future; `term` is then required.",
+            "format": "date"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Kept in the `document_contract_terminated` event; HTML is stripped.",
+            "maxLength": 500
+          },
+          "term": {
+            "type": "integer",
+            "description": "The term this renewal starts from, the contract's current `term`. Required unless `end_date` is sent; for a contract in another term the renewal is refused, so a repeated request never renews twice.",
+            "minimum": 1
+          },
+          "terms": {
+            "type": "object",
+            "properties": {
+              "auto_renew": {
+                "type": "boolean",
+                "description": "Whether the hourly run starts the next term the day after `end_date`, by `renewal_term_months`, instead of expiring the contract."
+              },
+              "counterparty_name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Emoji are kept; other characters outside the 3-byte range are dropped.",
+                "maxLength": 255
+              },
+              "counterparty_taxpayer_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "A valid CPF or CNPJ, formatted or not."
+              },
+              "currency": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Three letters, such as `BRL` or `USD`, stored in capitals; `BRL` when a `value` is set without one."
+              },
+              "end_date": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "`YYYY-MM-DD`, on or after `start_date`.",
+                "format": "date"
+              },
+              "external_references": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Kept as sent; must not contain emoji or other 4-byte characters.",
+                      "maxLength": 255,
+                      "example": "98765"
+                    },
+                    "system": {
+                      "type": "string",
+                      "description": "Letters, digits, `_`, `-` and `.`; stored in lower case.",
+                      "maxLength": 64,
+                      "example": "hubspot"
+                    }
+                  },
+                  "required": [
+                    "system",
+                    "id"
+                  ]
+                },
+                "description": "Replaces the whole list; `[]` or `null` clears it. Two items whose `system` and `id` compare equal case aside are one reference (the first sent is kept); a pair the database takes for one beyond that (accents, `ß` and `ss`) answers `400`.",
+                "maxItems": 20
+              },
+              "metadata": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "description": "Your own fields: up to 50 keys of 1 to 40 letters, digits, `_`, `-` or `.`, each holding plain text of at most 500 characters; no number under a key ending in `_at`, or `stuck_since`.",
+                "maxProperties": 50,
+                "additionalProperties": {
+                  "type": "string",
+                  "maxLength": 500
+                }
+              },
+              "notice_period_days": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "Days before `end_date` the notice period starts (`document_contract_renewal_notice`); none when unset.",
+                "minimum": 0,
+                "maximum": 3650
+              },
+              "owner_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "An active member of this workspace."
+              },
+              "parent_document_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Links the document as an amendment of this contract document, or of any document in its family (resolved to the root); `null` unlinks a pending amendment. With it, the other attributes are the terms the instrument changes, not terms of its own; on a pending amendment a `null` value drops that term from the delta rather than clearing it on the parent."
+              },
+              "relation_type": {
+                "type": "string",
+                "description": "Required on the first link. `amendment` may change `value`, `currency`, `start_date` (effective from, display only), `end_date`, `auto_renew`, `renewal_term_months`, `notice_period_days`, `counterparty_name`, `counterparty_taxpayer_id` and `metadata`; `renewal` only `end_date` and `value`; `termination` only `end_date` (the effective date).",
+                "enum": [
+                  "amendment",
+                  "renewal",
+                  "termination"
+                ]
+              },
+              "renewal_term_months": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "description": "How far a renewal by the term moves `end_date`; 12 when unset.",
+                "minimum": 1,
+                "maximum": 600
+              },
+              "start_date": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "`YYYY-MM-DD`, from the year 1000.",
+                "format": "date"
+              },
+              "status": {
+                "type": "string",
+                "description": "On creation any status, so a contract that ended before it was tracked is registered as it ended: `expired` needs an `end_date` in the past, `terminated` its `end_date`; neither is walked by the lifecycle. Afterwards only `draft` or `active` (a contract in force never goes back to `draft`): `expired` and `terminated` are set by the lifecycle and the terminate endpoint; a closed contract is reopened by renewing it.",
+                "enum": [
+                  "draft",
+                  "active",
+                  "expired",
+                  "terminated"
+                ]
+              },
+              "updated_at": {
+                "type": "string",
+                "description": "Optional precondition: the `updated_at` the client read the contract (or this document's amendment link) with, as the API returned it. If the contract or link changed since, nothing is written and the answer is `409` with `code: ContractChanged`. Not sent, or `null`: the write applies whatever changed meanwhile (last write wins). Compared to the second; a fraction of a second, as a JavaScript date prints it, is read and ignored. New terms and a first link have nothing to have read, so sending one answers `409`; on a pending amendment, send the link's own `updated_at` (the GET on that document).",
+                "format": "date-time"
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Two decimal places at most.",
+                "minimum": 0,
+                "maximum": 9999999999999.99
+              }
+            },
+            "description": "Every attribute is optional and only the ones sent change. `null` clears an attribute, except `auto_renew` (back to `false`) and `currency` (back to `BRL` while a `value` is set); `status` does not accept `null`. A changed `end_date` starts a new `term`.",
+            "minProperties": 1,
+            "additionalProperties": false,
+            "anyOf": [
+              {
+                "required": [
+                  "status"
+                ]
+              },
+              {
+                "required": [
+                  "counterparty_name"
+                ]
+              },
+              {
+                "required": [
+                  "counterparty_taxpayer_id"
+                ]
+              },
+              {
+                "required": [
+                  "value"
+                ]
+              },
+              {
+                "required": [
+                  "currency"
+                ]
+              },
+              {
+                "required": [
+                  "start_date"
+                ]
+              },
+              {
+                "required": [
+                  "end_date"
+                ]
+              },
+              {
+                "required": [
+                  "auto_renew"
+                ]
+              },
+              {
+                "required": [
+                  "renewal_term_months"
+                ]
+              },
+              {
+                "required": [
+                  "notice_period_days"
+                ]
+              },
+              {
+                "required": [
+                  "owner_id"
+                ]
+              },
+              {
+                "required": [
+                  "metadata"
+                ]
+              },
+              {
+                "required": [
+                  "external_references"
+                ]
+              },
+              {
+                "required": [
+                  "parent_document_id"
+                ]
+              },
+              {
+                "required": [
+                  "relation_type"
+                ]
+              }
+            ]
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "Optional precondition: the contract's `updated_at` as read. Changed since: `409`, nothing terminated.",
+            "format": "date-time"
+          },
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "The new value; unchanged when not sent, cleared by `null`."
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "account_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "const": "set"
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "terms": {
+                "type": "object",
+                "properties": {
+                  "auto_renew": {
+                    "type": "boolean",
+                    "description": "Whether the hourly run starts the next term the day after `end_date`, by `renewal_term_months`, instead of expiring the contract."
+                  },
+                  "counterparty_name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Emoji are kept; other characters outside the 3-byte range are dropped.",
+                    "maxLength": 255
+                  },
+                  "counterparty_taxpayer_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "A valid CPF or CNPJ, formatted or not."
+                  },
+                  "currency": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Three letters, such as `BRL` or `USD`, stored in capitals; `BRL` when a `value` is set without one."
+                  },
+                  "end_date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "`YYYY-MM-DD`, on or after `start_date`.",
+                    "format": "date"
+                  },
+                  "external_references": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Kept as sent; must not contain emoji or other 4-byte characters.",
+                          "maxLength": 255,
+                          "example": "98765"
+                        },
+                        "system": {
+                          "type": "string",
+                          "description": "Letters, digits, `_`, `-` and `.`; stored in lower case.",
+                          "maxLength": 64,
+                          "example": "hubspot"
+                        }
+                      },
+                      "required": [
+                        "system",
+                        "id"
+                      ]
+                    },
+                    "description": "Replaces the whole list; `[]` or `null` clears it. Two items whose `system` and `id` compare equal case aside are one reference (the first sent is kept); a pair the database takes for one beyond that (accents, `ß` and `ss`) answers `400`.",
+                    "maxItems": 20
+                  },
+                  "metadata": {
+                    "type": [
+                      "object",
+                      "null"
+                    ],
+                    "description": "Your own fields: up to 50 keys of 1 to 40 letters, digits, `_`, `-` or `.`, each holding plain text of at most 500 characters; no number under a key ending in `_at`, or `stuck_since`.",
+                    "maxProperties": 50,
+                    "additionalProperties": {
+                      "type": "string",
+                      "maxLength": 500
+                    }
+                  },
+                  "notice_period_days": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "description": "Days before `end_date` the notice period starts (`document_contract_renewal_notice`); none when unset.",
+                    "minimum": 0,
+                    "maximum": 3650
+                  },
+                  "owner_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "An active member of this workspace."
+                  },
+                  "parent_document_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Links the document as an amendment of this contract document, or of any document in its family (resolved to the root); `null` unlinks a pending amendment. With it, the other attributes are the terms the instrument changes, not terms of its own; on a pending amendment a `null` value drops that term from the delta rather than clearing it on the parent."
+                  },
+                  "relation_type": {
+                    "type": "string",
+                    "description": "Required on the first link. `amendment` may change `value`, `currency`, `start_date` (effective from, display only), `end_date`, `auto_renew`, `renewal_term_months`, `notice_period_days`, `counterparty_name`, `counterparty_taxpayer_id` and `metadata`; `renewal` only `end_date` and `value`; `termination` only `end_date` (the effective date).",
+                    "enum": [
+                      "amendment",
+                      "renewal",
+                      "termination"
+                    ]
+                  },
+                  "renewal_term_months": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "description": "How far a renewal by the term moves `end_date`; 12 when unset.",
+                    "minimum": 1,
+                    "maximum": 600
+                  },
+                  "start_date": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "`YYYY-MM-DD`, from the year 1000.",
+                    "format": "date"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "On creation any status, so a contract that ended before it was tracked is registered as it ended: `expired` needs an `end_date` in the past, `terminated` its `end_date`; neither is walked by the lifecycle. Afterwards only `draft` or `active` (a contract in force never goes back to `draft`): `expired` and `terminated` are set by the lifecycle and the terminate endpoint; a closed contract is reopened by renewing it.",
+                    "enum": [
+                      "draft",
+                      "active",
+                      "expired",
+                      "terminated"
+                    ]
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "description": "Optional precondition: the `updated_at` the client read the contract (or this document's amendment link) with, as the API returned it. If the contract or link changed since, nothing is written and the answer is `409` with `code: ContractChanged`. Not sent, or `null`: the write applies whatever changed meanwhile (last write wins). Compared to the second; a fraction of a second, as a JavaScript date prints it, is read and ignored. New terms and a first link have nothing to have read, so sending one answers `409`; on a pending amendment, send the link's own `updated_at` (the GET on that document).",
+                    "format": "date-time"
+                  },
+                  "value": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "description": "Two decimal places at most.",
+                    "minimum": 0,
+                    "maximum": 9999999999999.99
+                  }
+                },
+                "description": "Every attribute is optional and only the ones sent change. `null` clears an attribute, except `auto_renew` (back to `false`) and `currency` (back to `BRL` while a `value` is set); `status` does not accept `null`. A changed `end_date` starts a new `term`.",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "anyOf": [
+                  {
+                    "required": [
+                      "status"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "counterparty_name"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "counterparty_taxpayer_id"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "value"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "currency"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "start_date"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "end_date"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "auto_renew"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "renewal_term_months"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "notice_period_days"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "owner_id"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "metadata"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "external_references"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "parent_document_id"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "relation_type"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "action",
+              "document_id",
+              "terms"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "account_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "const": "renew"
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "end_date": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The new end date, after the current one. Absent, empty or `null`: the current end date plus the renewal term, stepped until it is in the future; `term` is then required.",
+                "format": "date"
+              },
+              "term": {
+                "type": "integer",
+                "description": "The term this renewal starts from, the contract's current `term`. Required unless `end_date` is sent; for a contract in another term the renewal is refused, so a repeated request never renews twice.",
+                "minimum": 1
+              },
+              "updated_at": {
+                "type": "string",
+                "description": "Optional precondition: the contract's `updated_at` as read. Changed since: `409`, nothing renewed.",
+                "format": "date-time"
+              },
+              "value": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "The new value; unchanged when not sent, cleared by `null`."
+              }
+            },
+            "required": [
+              "action",
+              "document_id",
+              "updated_at",
+              "term"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "account_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action": {
+                "type": "string",
+                "const": "terminate"
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Kept in the `document_contract_terminated` event; HTML is stripped.",
+                "maxLength": 500
+              },
+              "updated_at": {
+                "type": "string",
+                "description": "Optional precondition: the contract's `updated_at` as read. Changed since: `409`, nothing terminated.",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "action",
+              "document_id",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "requestExample": {
+        "action": "renew",
+        "document_id": "document-example",
+        "term": 1,
+        "updated_at": "2026-10-28T12:00:00Z"
+      },
+      "structuredContentSchema": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/DocumentContract"
+          },
+          {
+            "$ref": "#/$defs/DocumentContractAmendment"
+          }
+        ]
+      },
+      "responseExample": {
+        "resource": "document_contract",
+        "document_id": "document-example",
+        "status": "active",
+        "counterparty_name": "Example Company",
+        "value": 1200.5,
+        "currency": "BRL",
+        "start_date": "2026-11-01",
+        "end_date": "2028-10-31",
+        "auto_renew": false,
+        "renewal_term_months": 12,
+        "notice_period_days": 30,
+        "term": 2,
+        "owner_id": null,
+        "metadata": null,
+        "external_references": [],
+        "amendments": [],
+        "created_at": "2026-10-28T12:00:00Z",
+        "updated_at": "2026-10-28T12:01:00Z"
+      },
+      "additionalRequestExamples": [
+        {
+          "action": "set",
+          "document_id": "document-example",
+          "terms": {
+            "status": "active",
+            "end_date": "2027-10-31",
+            "notice_period_days": 30,
+            "auto_renew": false
+          }
+        },
+        {
+          "action": "set",
+          "document_id": "amendment-example",
+          "terms": {
+            "parent_document_id": "document-example",
+            "relation_type": "renewal",
+            "end_date": "2028-10-31"
+          }
+        },
+        {
+          "action": "terminate",
+          "document_id": "document-example",
+          "updated_at": "2026-10-28T12:00:00Z",
+          "reason": "Replaced by a new agreement"
+        }
+      ],
+      "api": {
+        "operations": [
+          {
+            "action": "set",
+            "method": "PUT",
+            "path": "/v1/accounts/{accountId}/documents/{documentId}/contract"
+          },
+          {
+            "action": "renew",
+            "method": "POST",
+            "path": "/v1/accounts/{accountId}/documents/{documentId}/contract/renew"
+          },
+          {
+            "action": "terminate",
+            "method": "POST",
+            "path": "/v1/accounts/{accountId}/documents/{documentId}/contract/terminate"
+          }
+        ]
+      }
     }
   ],
   "$defs": {
@@ -5043,6 +6323,241 @@
         }
       },
       "type": "object"
+    },
+    "DocumentContract": {
+      "description": "The contract terms tracked on a document.",
+      "properties": {
+        "resource": {
+          "type": "string",
+          "const": "document_contract"
+        },
+        "document_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "active",
+            "expired",
+            "terminated"
+          ]
+        },
+        "counterparty_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "counterparty_taxpayer_id": {
+          "description": "CPF or CNPJ, digits only.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "description": "Two decimal places at most.",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "currency": {
+          "description": "ISO 4217 code; `BRL` when a value is sent without one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "start_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "end_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "auto_renew": {
+          "type": "boolean"
+        },
+        "renewal_term_months": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "notice_period_days": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "term": {
+          "description": "Steps on every renewal, starting at 1.",
+          "type": "integer"
+        },
+        "owner_id": {
+          "description": "ID of the workspace member who owns the contract. When the owner is no longer a member of the workspace (removed, left, or deleted with their account), the hourly run hands the contract to the first owner who is still an active member, or leaves it without one; an inactive member stays the owner. The contract's e-mails (renewal notice, expiring, expired, renewed) go to the first of the owner and the document's creator who is an active member, as that member's notification preferences allow.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metadata": {
+          "description": "Up to 50 keys of your own, each holding text of at most 500 characters; `null` when there are none. A key ending in `_at` cannot hold a number: the API returns numbers under such keys as dates.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "external_references": {
+          "description": "IDs outside systems use for this contract, ordered by system and id.",
+          "type": "array",
+          "items": {
+            "properties": {
+              "system": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "document": {
+          "$ref": "#/$defs/Document",
+          "description": "Only with `expand=document`: the document the terms are tracked on."
+        },
+        "amendments": {
+          "description": "Only on the single-contract read: the documents that amend, renew or terminate this contract, the applied ones first by `number`, then the pending ones.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DocumentContractAmendment"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "type": "object",
+      "required": [
+        "resource",
+        "document_id",
+        "status"
+      ]
+    },
+    "DocumentContractAmendment": {
+      "description": "A document that amends, renews or terminates a contract: its link and the terms it changes. The parent's terms take the delta once this document is certificated; until then the parent is untouched.",
+      "properties": {
+        "resource": {
+          "type": "string",
+          "const": "document_contract_amendment"
+        },
+        "document_id": {
+          "description": "This document, the instrument.",
+          "type": "string"
+        },
+        "document_name": {
+          "description": "This document's name.",
+          "type": "string"
+        },
+        "parent_document_id": {
+          "description": "The contract document whose terms change.",
+          "type": "string"
+        },
+        "relation_type": {
+          "type": "string",
+          "enum": [
+            "amendment",
+            "renewal",
+            "termination"
+          ]
+        },
+        "number": {
+          "description": "Position among the parent's applied amendments by signing date; `null` while pending.",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "status": {
+          "description": "`applied` once the delta moved the parent's terms.",
+          "type": "string",
+          "enum": [
+            "pending",
+            "applied"
+          ]
+        },
+        "document_status": {
+          "description": "This document's own status, so a declined, cancelled or expired instrument shows as such. An instrument applies only while its document is `certificated`: one whose document reads `failed` after it was signed waits, with no `apply_error`, until it is certificated again, and then applies in its place in the signing order.",
+          "type": "string"
+        },
+        "apply_error": {
+          "description": "Why a signed instrument has not applied yet, retried every hour: the workspace's plan does not include contract tracking (it applies on the first run after the plan returns), the parent would not take the delta, an instrument signed before this one has not applied yet, one signed after it has already applied (this one then stays blocked: unlink it, and record what it still changes on a new instrument), or an unexpected failure.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "currency": {
+          "description": "The currency of the amounts in `terms` and `changes`. Once applied, the contract's currency at that moment, kept whatever the contract moves to later. While pending (and for an instrument applied before this was kept), the one this instrument moves the contract to, otherwise the contract's. `null` when neither has one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "terms": {
+          "description": "The delta: only the terms this instrument changes; `null` when it changes none (a termination on the day it is signed).",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "changes": {
+          "description": "Every parent field the roll-up moves, as `{from, to}`: a preview while pending, the record once applied; `null` when it moves none.",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "applied_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "type": "object",
+      "required": [
+        "resource",
+        "document_id",
+        "status"
+      ]
     }
   }
 }
