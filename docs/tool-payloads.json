@@ -396,6 +396,24 @@
             "type": "string",
             "description": "Document ID.",
             "minLength": 1
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "sort": {
+            "type": "string",
+            "description": "Activity order: -id for newest first, or id for oldest first.",
+            "default": "-id",
+            "enum": [
+              "-id",
+              "id"
+            ]
           }
         },
         "required": [
@@ -418,7 +436,10 @@
         }
       },
       "requestExample": {
-        "document_id": "example_document_id"
+        "document_id": "example_document_id",
+        "sort": "-id",
+        "page": 1,
+        "per_page": 20
       },
       "responseExample": {
         "data": [
@@ -558,7 +579,7 @@
       },
       "requestExample": {
         "file_name": "contract.pdf",
-        "file_base64": "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiAvQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCA1NiA+PgpzdHJlYW0KQlQgL0YxIDI0IFRmIDcyIDcwMCBUZCAoQXNzaW5hZnkgTUNQIGF1ZGl0IHNhbXBsZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzNDcgMDAwMDAgbiAKdHJhaWxlcgo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+CnN0YXJ0eHJlZgo0MTcKJSVFT0Y=",
+        "file_base64": "JVBERi0xLjQKJSVFT0YK",
         "account_id": "example_account_id"
       },
       "responseExample": {
@@ -902,7 +923,7 @@
       "requestExample": {
         "account_id": "example_account_id",
         "file_name": "contract.pdf",
-        "file_base64": "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiAvQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCA1NiA+PgpzdHJlYW0KQlQgL0YxIDI0IFRmIDcyIDcwMCBUZCAoQXNzaW5hZnkgTUNQIGF1ZGl0IHNhbXBsZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzNDcgMDAwMDAgbiAKdHJhaWxlcgo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+CnN0YXJ0eHJlZgo0MTcKJSVFT0Y=",
+        "file_base64": "JVBERi0xLjQKJSVFT0YK",
         "signers": [
           {
             "full_name": "Example Signer",
@@ -1041,7 +1062,7 @@
       "estimateRequestExample": {
         "account_id": "example_account_id",
         "file_name": "contract.pdf",
-        "file_base64": "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiAvQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCA1NiA+PgpzdHJlYW0KQlQgL0YxIDI0IFRmIDcyIDcwMCBUZCAoQXNzaW5hZnkgTUNQIGF1ZGl0IHNhbXBsZSkgVGogRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8IC9UeXBlIC9Gb250IC9TdWJ0eXBlIC9UeXBlMSAvQmFzZUZvbnQgL0hlbHZldGljYSA+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjQxIDAwMDAwIG4gCjAwMDAwMDAzNDcgMDAwMDAgbiAKdHJhaWxlcgo8PCAvU2l6ZSA2IC9Sb290IDEgMCBSID4+CnN0YXJ0eHJlZgo0MTcKJSVFT0Y=",
+        "file_base64": "JVBERi0xLjQKJSVFT0YK",
         "signers": [
           {
             "full_name": "Example Signer",
@@ -2019,7 +2040,7 @@
     },
     {
       "name": "assinafy_set_assignment_expiration",
-      "description": "Replace the deadline of an existing signature request with an RFC 3339 timestamp at least one hour in the future. A shorter deadline ends signing when it passes; Assinafy refuses expired or closed requests.",
+      "description": "Set an existing signature request deadline with an ISO 8601 date or date-time at least one hour in the future, or remove it with expires_at: null. A shorter deadline ends signing when it passes; Assinafy refuses expired or closed requests.",
       "annotations": {
         "destructiveHint": true,
         "idempotentHint": false,
@@ -2039,8 +2060,11 @@
             "description": "unique assignment ID"
           },
           "expires_at": {
-            "type": "string",
-            "description": "new expiry timestamp in RFC 3339 format"
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "new ISO 8601 expiry, or null to remove the expiration"
           }
         },
         "required": [
@@ -2329,7 +2353,7 @@
     },
     {
       "name": "assinafy_update_signer",
-      "description": "Update a signer's information.\n\n**Verification integrity:** `email` / `whatsapp_phone_number` cannot be changed while the signer has verified that channel on an in-flight (not yet certificated) document — the response is `400` naming the offending document(s). Already-certificated documents do not block updates. Changing a channel that has *unverified* in-flight requests rotates their access/verification codes (invalidating previously sent links/OTPs); use the resend endpoint to redeliver. `full_name` can always be updated.",
+      "description": "Update a signer's information. Only supplied fields change; send `null` or an empty string to clear `email`, `whatsapp_phone_number`, or `government_id`.\n\n**Verification integrity:** `email` / `whatsapp_phone_number` cannot be changed while the signer has verified that channel on an in-flight (not yet certificated) document — the response is `400` naming the offending document(s). Already-certificated documents do not block updates. Changing a channel that has *unverified* in-flight requests rotates their access/verification codes (invalidating previously sent links/OTPs); use the resend endpoint to redeliver. `full_name` can always be updated.",
       "annotations": {
         "destructiveHint": true,
         "idempotentHint": false,
@@ -2346,16 +2370,31 @@
             "minLength": 1
           },
           "email": {
-            "type": "string",
-            "format": "email"
+            "description": "A valid email address, or null/empty to clear it.",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "email"
+              },
+              {
+                "type": "string",
+                "maxLength": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "full_name": {
             "type": "string",
             "minLength": 1
           },
           "government_id": {
-            "type": "string",
-            "description": "Signer's CPF (11 digits) or CNPJ (14 characters; may be alphanumeric). Formatting is accepted and the value is normalized on save. Required before the signer can use a verification method that identifies them by CPF."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Signer's CPF (11 digits) or CNPJ (14 characters; may be alphanumeric). Formatting is accepted and the value is normalized on save. Required before the signer can use a verification method that identifies them by CPF. Null/empty clears it."
           },
           "signer_id": {
             "type": "string",
@@ -2363,8 +2402,11 @@
             "minLength": 1
           },
           "whatsapp_phone_number": {
-            "type": "string",
-            "description": "E.164; normalized on save."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "E.164 and normalized on save; null/empty clears it."
           }
         },
         "required": [
@@ -5418,8 +5460,22 @@
         "id": {
           "type": "string"
         },
-        "sender_email": {
+        "document_id": {
+          "description": "The document this assignment belongs to; null only after deletion.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
           "type": "string",
+          "format": "date-time"
+        },
+        "sender_email": {
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "email"
         },
         "method": {
@@ -5731,6 +5787,21 @@
         "signing_url": {
           "type": "string"
         },
+        "verification_code": {
+          "description": "Certificate-page verification code; null before certification.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verification_url": {
+          "description": "Public verification page; null before certification.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
         "decline_reason": {
           "type": [
             "string",
@@ -5785,6 +5856,10 @@
         "updated_at": {
           "type": "string",
           "format": "date-time"
+        },
+        "has_contract": {
+          "description": "Present on workspace document details when contract tracking is enabled; a missing key means unknown.",
+          "type": "boolean"
         },
         "activities": {
           "type": "array",

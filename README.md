@@ -1,707 +1,142 @@
-# Guia do cliente MCP da Assinafy
+# Servidor MCP da Assinafy
 
 *Português · [Read in English](README.en.md)*
 
-Conecte a Assinafy ao seu assistente para preparar e enviar documentos,
-acompanhar assinaturas, enviar lembretes e baixar cópias assinadas.
+Servidor MCP em Go para assinaturas e gestão do ciclo de vida de contratos na
+Assinafy. Expõe 29 ferramentas por Streamable HTTP sem estado: 27 ferramentas de
+assinatura e duas de CLM com ações fixas. O contrato REST público está na
+[documentação da API](https://api.assinafy.com.br/v1/docs).
 
-Use `https://mcp.assinafy.com.br/mcp` como URL do servidor. Entre na Assinafy,
-escolha um workspace e aprove as permissões solicitadas. Você não precisa criar
-um aplicativo OAuth nem informar client ID, client secret, chave de API ou
-cabeçalho de workspace.
+## Conectar
 
-É possível conectar e consultar o catálogo antes de entrar. A autorização é
-solicitada quando uma ferramenta precisa acessar seu workspace.
-
-## Codex
+O servidor é um resource server OAuth 2.1. O cliente descobre os metadados, registra
+por CIMD, abre o consentimento no navegador com PKCE S256 e guarda/renova o próprio
+token. Cada conexão escolhe uma workspace. O MCP valida issuer, audience, validade,
+workspace e escopos, depois troca o token por outro token curto e exclusivo da API.
+As credenciais OAuth do operador ficam somente no servidor.
 
 ```bash
 codex mcp add assinafy --url https://mcp.assinafy.com.br/mcp
 codex mcp login assinafy
-```
 
-Conclua a entrada no navegador, escolha o workspace e aprove as permissões.
-Veja a [documentação MCP do Codex](https://developers.openai.com/codex/mcp).
-
-## Claude Code
-
-```bash
 claude mcp add --transport http assinafy https://mcp.assinafy.com.br/mcp
-claude mcp login assinafy
 ```
 
-Você também pode abrir `/mcp` no Claude Code para autenticar na Assinafy.
-Conclua a entrada no navegador e escolha seu workspace. Veja a
-[documentação MCP do Claude Code](https://code.claude.com/docs/en/mcp).
+Em conectores remotos do Claude, use a mesma URL e conclua a autorização. Os escopos
+são `account:read`, `documents:read`, `documents:write`, `templates:read` e
+`templates:write`; o cliente pode aprovar um subconjunto. Veja
+[autenticação](docs/authentication.md) e [configuração do cliente](MCP_CLIENT_DOCUMENTATION.md).
 
-## Conectores remotos do Claude
+## Fluxo completo de assinatura
 
-Nas configurações de conectores do Claude, adicione um conector remoto
-personalizado chamado Assinafy com a URL `https://mcp.assinafy.com.br/mcp`,
-conecte e conclua o consentimento. Deixe as credenciais OAuth opcionais em branco
-quando houver CIMD. A disponibilidade de conectores personalizados depende do
-plano e das configurações da organização. O registro por linha de comando é do
-Claude Code; um conector hospedado precisa da URL HTTPS pública.
+1. Localize documentos, templates, campos, papéis e contatos com as ferramentas de
+   listagem/leitura. Resolva nomes ambíguos e preserve os IDs retornados.
+2. Para um PDF novo por email, use `assinafy_send_pdf_for_signature`. A ferramenta
+   valida, envia uma vez, aguarda metadados, reutiliza/cria contatos e cria um
+   assignment virtual por Email. Para preparar sem enviar, use
+   `assinafy_upload_document` e depois `assinafy_create_assignment`.
+3. Para template, leia todos os papéis e campos, valide os valores de editor e use
+   `assinafy_create_document_from_template` com um signatário por papel.
+4. Escolha `Email`, `Whatsapp`, `DigitalCertificate` ou
+   `IdDocumentFaceMatchBasic`. Só um canal de notificação é permitido. Email e
+   Whatsapp exigem o canal correspondente; certificado e biometria aceitam ambos.
+   A1/A3, documento de identidade e liveness são concluídos pela pessoa na Assinafy.
+5. Use `virtual` sem campos ou `collect` com campos posicionados nas páginas.
+   Certificado exige `virtual` e signatário sozinho na etapa. Quando houver ordem,
+   todos informam etapas contíguas iniciando em 1.
+6. Antecipe custos de assignment, template ou lembrete com `estimate_only`. Plano,
+   saldo, elegibilidade de identidade e assinatura continuam sob controle da API.
+7. Acompanhe documento, assignment, páginas de atividades e notificações. Em
+   `pending_identity_review`, uma pessoa autorizada da conta revisa as evidências.
+8. Aguarde `certificated`, baixe o artefato base64 e, se necessário, valide o hash
+   real da assinatura com `assinafy_verify_document`.
 
-Veja a [autenticação de conectores do Claude](https://claude.com/docs/connectors/building/authentication).
-
-## ChatGPT
-
-Instale a [Assinafy pelo diretório de plugins do
-ChatGPT](https://chatgpt.com/plugins/plugin_asdk_app_6acbe48b99f881919f32df8e549c1efa),
-conecte e conclua a entrada na Assinafy e a seleção de workspace. Para adicionar o
-servidor manualmente, configure uma conexão MCP remota com OAuth e a URL da Assinafy. Escolha CIMD se
-houver uma opção de registro, deixe as credenciais opcionais em branco e conclua
-a entrada na Assinafy e a seleção de workspace. Veja a
-[autenticação do ChatGPT](https://developers.openai.com/plugins/build/auth).
-
-No ChatGPT Work, o servidor também pode avisar o ChatGPT quando o status de um
-documento monitorado muda ou quando ele é certificado, por meio do
-[MCP Events](https://developers.openai.com/plugins/build/mcp-events). Peça ao ChatGPT
-para acompanhar um documento; ele cria e renova a assinatura sozinho.
-
-## VS Code / GitHub Copilot Chat
-
-Adicione esta entrada à configuração MCP do VS Code:
+Exemplo com email sintético:
 
 ```json
-{
-  "servers": {
-    "assinafy": {
-      "type": "http",
-      "url": "https://mcp.assinafy.com.br/mcp"
-    }
-  }
-}
+{"file_name":"contrato.pdf","file_base64":"<PDF_BASE64>","signers":[{"full_name":"Signatário Exemplo","email":"signer@example.invalid"}]}
 ```
 
-Inicie o servidor e conclua a autorização no navegador. O VS Code escolhe CIMD
-quando anunciado e sabe pedir escopos adicionais quando uma ferramenta precisa.
-Veja o [suporte a autenticação do VS Code](https://code.visualstudio.com/updates/v1_106#_authentication-client-id-metadata-document-authentication-flow)
-e a [configuração MCP](https://code.visualstudio.com/docs/agents/reference/mcp-configuration).
+`assinafy_update_signer` aceita null ou string vazia para limpar email, WhatsApp ou
+documento fiscal. `assinafy_set_assignment_expiration` aceita data/data-hora ISO
+8601 ou null para remover o prazo. Atividades aceitam `sort`, `page` e `per_page`.
+Entradas, respostas, exemplos, estados e recuperação estão em
+[ferramentas](docs/tools.md), [schemas completos](docs/tool-payloads.json) e
+[erros](docs/errors.md).
 
-## Workspaces e permissões
+Escritas nunca são repetidas automaticamente. Uma falha composta pode deixar um
+contato ou documento enviado; preserve o ID, confira o assignment e continue sem
+reenviar o PDF. O assistente nunca assina por uma pessoa.
 
-Uma conexão autoriza um workspace. As ferramentas com escopo de conta descobrem
-essa conta automaticamente. O argumento `account_id` pode repeti-la, mas não
-seleciona outra. Conecte cada workspace adicional separadamente. Nunca coloque
-chaves de API, tokens OAuth ou qualquer outra credencial em prompts, argumentos
-de ferramenta ou `_meta`; requisições que os carregam são recusadas.
+## Extensões MCP Apps e Events
 
-Você configura a URL do MCP. Os metadados anunciam
-`account:read documents:read documents:write templates:read templates:write`
-para todo o catálogo. O login pede o conjunto completo por padrão, cobrindo todas
-as ferramentas com um consentimento. Você pode escolher menos escopos no cliente
-ou na tela de consentimento e usar as ferramentas permitidas por eles. A API exige
-`templates:write` para gerar um documento de template salvo, e `documents:write` para validar valores de campos. Peça
-`offline_access` quando o cliente usar refresh tokens para acesso em segundo plano.
+Hosts compatíveis renderizam o recurso `ui://` anunciado com
+`text/html;profile=mcp-app`. Ele atende status/lembretes, revisão antes do envio,
+posicionamento visual de campos e navegação de contratos. Outros hosts recebem o
+mesmo resultado em texto e conteúdo estruturado.
 
-Uma permissão ausente retorna HTTP `403 insufficient_scope`, com os escopos a
-aprovar, antes de iniciar o fluxo. Autorize as permissões solicitadas somadas às
-já concedidas e tente novamente. Outras falhas podem interromper uma operação
-depois de iniciada; inspecione qualquer `document_id` preservado antes de repetir
-a operação.
+MCP Events é uma extensão opcional anunciada com `events/list`, `events/subscribe`
+e `events/unsubscribe`. Monitora `document.status_changed`,
+`document.certificated` e `contract.activity`, valida o challenge, assina entregas,
+limita inscrições e usa arquivo privado persistente. Exige uma réplica e é separado
+das subscriptions do núcleo MCP e dos webhooks da conta. Veja [Events](docs/events.md).
 
-Para o Codex, autorize explicitamente o fluxo completo de documentos e templates:
+Webhooks de conta são geridos na Assinafy. Guarde o segredo único ao criar um
+endpoint assinado; OAuth não o lê nem o rotaciona. O receptor verifica Standard
+Webhooks sobre o corpo bruto, rejeita timestamps antigos e deduplica delivery IDs.
+
+## Gestão de contratos
+
+Use `assinafy_browse_contracts` para listar, ler ou seguir uma família. Use
+`assinafy_update_contract` para definir termos, renovar ou encerrar somente após ler
+o `updated_at`; renovação também preserva o termo atual. Em conflito, releia e nunca
+sobrescreva silenciosamente. Aditivos são documentos assinados separados, ligados
+por `parent_document_id` e `relation_type`. Events informa; não autoriza escrita.
+
+## Executar e operar
+
+Requer Go 1.27.3+, MCP Go SDK v1.8.0 e HTTPS em produção. O binário não carrega
+`.env`; injete segredos em runtime.
 
 ```bash
-codex mcp login assinafy --scopes account:read,documents:read,documents:write,templates:read,templates:write,offline_access
+make build
+./bin/assinafy-mcp-server -addr :8080
 ```
 
-Para uma conexão de documentos intencionalmente somente leitura, escolha:
+| Variável | Função |
+|---|---|
+| `MCP_RESOURCE_URL` | URL pública obrigatória terminando em `/mcp` |
+| `ASSINAFY_OAUTH_ISSUER` | Padrão `https://auth.assinafy.com.br` |
+| `ASSINAFY_BASE_URL` | Padrão `https://api.assinafy.com.br/v1` |
+| `ASSINAFY_OAUTH_CLIENT_ID` / `ASSINAFY_OAUTH_CLIENT_SECRET` | Cliente de introspecção/troca obrigatório |
+| `ASSINAFY_TIMEOUT` | Timeout da API; padrão `30s` |
+| `MCP_EVENTS_STORE` | Arquivo privado opcional de Events; uma réplica |
+| `MCP_ADDR` | Padrão `:8080` |
+| `MCP_TLS_CERT_FILE` / `MCP_TLS_KEY_FILE` | TLS direto opcional |
+| `MCP_ALLOWED_ORIGINS` | Origens exatas de navegador, separadas por vírgula |
+| `OPENAI_APPS_CHALLENGE` | Token opcional de verificação de domínio OpenAI |
+| `LOG_LEVEL` / `LOG_FORMAT` | Padrão `info` / `json` |
+
+`POST /mcp` atende MCP; `GET /mcp` entrega identidade, manifesto e metadados OAuth.
+A descoberta também fica em `/.well-known/oauth-protected-resource/mcp`; saúde em
+`/healthz`. O proxy preserva host público e headers OAuth/MCP, encerra TLS e aplica
+limites por origem e tenant. Requisições: 40 MiB; PDF decodificado: 25 MiB; JSON:
+16 MiB; artefato binário: 64 MiB. Veja [segurança e deploy](SECURITY.md).
+
+## Verificar
 
 ```bash
-codex mcp login assinafy --scopes account:read,documents:read,offline_access
+make verify
+make docker-build
+make docker-test
+make docker-lint
 ```
 
-Seu cliente guarda e renova os tokens. Se uma concessão expirar ou for revogada,
-deixe o cliente renová-la ou reconecte pela Assinafy. Com `offline_access`, cada
-renovação devolve um novo refresh token com mais 30 dias de validade; a conexão
-só expira após 30 dias sem renovação, e então é preciso reconectar.
-Nunca cole tokens na conversa ou nos argumentos das ferramentas.
-
-## O que você pode pedir
-
-Converse com o assistente em linguagem natural. Ele escolhe a ferramenta certa,
-localiza nomes por você e só confirma o que for ambíguo. Nomes, e-mails e datas
-abaixo são exemplos.
-
-**Acompanhar documentos**
-
-| Você diz | O que acontece |
-|---|---|
-| “Quais documentos ainda aguardam assinatura?” | Lista os documentos em `pending_signature`, mais recentes primeiro |
-| “Todo mundo já assinou o contrato de serviços da Acme?” | Encontra o documento e informa quem assinou e quem falta |
-| “Quem ainda não assinou o NDA e quando foi convidado?” | Lê a etapa e o histórico de convites de cada signatário pendente |
-| “O que aconteceu com o contrato de locação esta semana?” | Mostra a linha do tempo de eventos do documento |
-| “O convite por WhatsApp para o Carlos chegou?” | Lê o histórico de entrega por WhatsApp da solicitação |
-
-**Enviar para assinatura**
-
-| Você diz | O que acontece |
-|---|---|
-| “Envie contrato.pdf para Ana Lima, ana@example.com, assinar.” | Envia o PDF, aguarda o processamento e manda o convite por e-mail |
-| “Suba proposta.pdf mas não envie ainda. Chame de Proposta v2.” | Envia e renomeia o arquivo; ninguém é notificado |
-| “Envie a Proposta v2 primeiro para a Ana e depois para o Bruno.” | Solicita assinaturas no documento já enviado, com ordem de assinatura |
-| “Envie com a mensagem ‘Por favor, assine até sexta’ e validade até 30 de junho.” | Inclui a mensagem do convite e a data de expiração |
-| “Envie a locação para a Ana e coloque financeiro@example.com em cópia, sem pedir assinatura.” | Salva o contato e envia com um destinatário apenas em cópia |
-
-Para enviar um arquivo, anexe-o ou indique onde ele está. O assistente lê o
-arquivo e envia o conteúdo; o servidor nunca abre caminhos do seu computador.
-
-**Usar modelos**
-
-| Você diz | O que acontece |
-|---|---|
-| “Quais modelos temos?” | Lista os modelos salvos com papéis e campos |
-| “Use o modelo de NDA para Carla Souza, carla@example.com, com a empresa Acme Ltda.” | Associa o campo, valida o valor, preenche o papel e envia |
-| “123.456.789-09 é válido para o campo CPF?” | Valida o valor sem criar nada |
-
-**Gerenciar contatos**
-
-| Você diz | O que acontece |
-|---|---|
-| “O Bruno Costa já está nos contatos?” | Pesquisa os signatários do workspace |
-| “Adicione Bruno Costa, bruno@example.com, como contato.” | Cria o contato; nenhum convite é enviado |
-| “Troque o WhatsApp da Carla para +55 11 91234-5678.” | Atualiza o contato, respeitando as regras de verificação da Assinafy |
-
-**Acompanhar pendências**
-
-| Você diz | O que acontece |
-|---|---|
-| “Lembre a Ana de assinar o contrato de serviços.” | Confirma que ela ainda está pendente e envia um lembrete |
-| “Dê aos signatários da locação prazo até 15 de julho.” | Altera a expiração; nenhum lembrete é enviado |
-
-**Baixar, verificar e limpar**
-
-| Você diz | O que acontece |
-|---|---|
-| “Baixe a cópia assinada do contrato da Acme.” | Confirma que a certificação terminou e baixa o PDF certificado |
-| “Mostre a primeira página do contrato.” | Baixa uma prévia da página |
-| “Esta assinatura é válida? Hash 3f2a…” | Consulta o registro público de assinatura; funciona sem login |
-| “Exclua o rascunho Proposta v1.” | Exclui o documento se a Assinafy ainda permitir no estado atual |
-
-O assistente não assina, não aceita termos nem informa códigos de verificação por
-outra pessoa, e não cria nem edita modelos. Isso continua na Assinafy.
-
-## Comportamento na conversa
-
-Comece pelo objetivo do usuário. Resolva nomes e reutilize os IDs já devolvidos;
-não peça que a pessoa conheça identificadores da API. Faça uma pergunta curta
-quando houver ambiguidade de destinatário, papel ou documento. Um pedido explícito
-para enviar, lembrar ou excluir já autoriza aquela ação; não repita a confirmação.
-
-| Pedido | Fluxo |
-|---|---|
-| “Envie este PDF para Ana.” | `assinafy_send_pdf_for_signature`, após resolver o contato autorizado |
-| “Use nosso template de NDA.” | Localizar template, papéis e campos; validar valores; chamar `assinafy_create_document_from_template` |
-| “Ana já assinou?” | `assinafy_list_documents` e depois `assinafy_get_document`; informar pendências e estado atual |
-| “Lembre a Ana.” | Conferir o assignment; chamar `assinafy_resend_notification` para ela |
-| “Baixe a cópia assinada.” | Conferir certificação e artefato; `assinafy_download_document` com `artifact: "certificated"` |
-
-**Cartões no Claude e no ChatGPT**
-
-| Você diz | O que acontece |
-|---|---|
-| “Mostre como está o contrato da Acme.” | Um cartão de status: quem assinou, quem falta, a expiração, com **Lembrar** e **Atualizar** |
-| “Quero revisar antes de enviar o NDA para a Ana e o Bruno.” | Um cartão de revisão com destinatários e verificação; nada é enviado até você clicar em **Enviar** |
-| “Quero posicionar eu mesmo os campos de assinatura no contrato de locação.” | Um editor em tela cheia para posicionar campos em cada página e depois **Enviar** |
-
-Os demais clientes, incluindo o Claude Code, recebem as mesmas informações em
-texto. Veja os [cartões visuais](docs/tools.md#visual-cards).
-
-O modelo escolhe a ferramenta. A resposta deve explicar o resultado em
-linguagem comum, sem expor IDs ou base64 desnecessários. Leituras e preparação
-não enviam convites. Consulte [todas as ferramentas e entradas](docs/tools.md).
-
-## Fluxo do documento
-
-O servidor oferece 29 ferramentas, incluindo duas para gestão de contratos. Seu assistente
-escolhe as ferramentas do catálogo; você descreve o que quer fazer.
-Consulte a [referência de ferramentas](docs/tools.md) para entradas e exemplos.
-
-```mermaid
-flowchart TD
-    A[Conectar e autorizar um workspace] --> B{Origem do documento}
-    B --> C[Localizar um documento existente]
-    B --> D[Enviar um PDF ou usar um template]
-    D --> E[Preparar e solicitar assinaturas]
-    C --> F[Ler status, assignment, signatários e atividades]
-    E --> F
-    F --> G{Estado atual}
-    G -->|Pendente| H[Conferir entrega, lembrar ou atualizar expiração]
-    H --> F
-    G -->|Certificando| F
-    G -->|Certificado| I[Baixar e verificar]
-    G -->|Falha ou recusa| J[Inspecionar e escolher a recuperação]
-```
-
-### 1. Localizar o documento e conferir seu estado
-
-Use `assinafy_list_documents` com `search`, `status`, `page` e `per_page`. Ele
-também aceita `sort`, que recebe `name` ou `updated_at`, opcionalmente prefixado
-por `-` para inverter a ordem. As páginas
-começam em 1 e trazem no máximo 100 registros; siga o `meta` de paginação
-retornado em vez de supor que a primeira página contém todos os documentos.
-
-Por exemplo, chame `assinafy_list_documents` com:
-
-```json
-{
-  "status": "pending_signature",
-  "sort": "-updated_at",
-  "page": 1,
-  "per_page": 25
-}
-```
-
-Identificado o documento correto, chame `assinafy_get_document`:
-
-```json
-{
-  "document_id": "DOCUMENT_ID"
-}
-```
-
-Use os IDs devolvidos pela Assinafy em todas as chamadas seguintes. Não invente
-IDs nem deduza o ID do assignment a partir do ID do documento. Os detalhes do
-documento expõem o `status` atual, `is_closed`, `assignment`, os registros de
-signatários, IDs de página, artefatos e qualquer motivo de recusa informado pela
-Assinafy. O ciclo de vida documentado é:
-
-| Estado | Próximo passo |
-|---|---|
-| `uploading`, `uploaded`, `metadata_processing` | O processamento não terminou. Verifique depois; assignments `collect` precisam dos metadados de página prontos. |
-| `metadata_ready` | Inspecione ou renomeie o PDF e prepare a solicitação de assinatura. |
-| `pending_signature` | Inspecione signatários pendentes, ordem de assinatura, histórico de entrega e expiração. |
-| `pending_identity_review` | Todas as assinaturas terminaram; conclua a revisão manual de identidade na Assinafy antes da certificação. |
-| `certificating` | Todas as assinaturas podem estar presentes enquanto os artefatos finais ainda são gerados. |
-| `certificated` | Baixe os artefatos assinados disponíveis. Este estado não é excluível pela API documentada. |
-| `expired` | Inspecione o assignment e decida se atualiza a expiração. A Assinafy valida se a atualização é permitida. |
-| `rejected_by_signer`, `rejected_by_user` | Leia os detalhes da recusa e escolha o próximo passo com o usuário. Um lembrete não reverte uma recusa. |
-| `failed` | Leia as atividades do documento e o erro antes de escolher a recuperação. |
-
-As conferências de status são leituras individuais, não assinaturas de eventos.
-Use consultas com limite quando pedirem para acompanhar um documento; pare em um
-estado terminal ou no tempo combinado.
-
-### 2. Inspecionar progresso e entrega
-
-Use `assinafy_get_document` para identificar quem realmente está pendente. O
-assignment traz `id`, `signers[].id`, `completed`, `step`, `notified`,
-`notification_history` e as URLs de assinatura quando disponíveis. Campos
-opcionais ausentes significam que a API não forneceu aquela informação. Um
-signatário aguardando uma etapa anterior não está necessariamente sofrendo falha
-de entrega.
-
-Chame `assinafy_list_document_activities` com `document_id` para a linha do tempo
-dos eventos, incluindo data e payload de cada um. Inspecione
-`notification_history` em busca de eventos enviados/falhos e detalhes de erro.
-Para entrega por WhatsApp, chame `assinafy_list_whatsapp_notifications` com
-`document_id` e `assignment_id`. Trate links e códigos de acesso retornados como sensíveis e
-compartilhe apenas com os destinatários autorizados.
-
-**100% de progresso não prova que o PDF certificado está pronto.** Confira o
-estado do ciclo de vida e a disponibilidade do artefato antes de baixá-lo.
-
-### 3. Reenviar um lembrete
-
-Leia o documento de novo, identifique o signatário pendente e a etapa ativa, e
-confirme que a instrução do usuário autoriza aquele lembrete. Escopos OAuth
-autorizam o acesso a uma operação; eles não escolhem um destinatário pelo
-usuário. Um lembrete consome créditos de notificação. Um pedido explícito de
-lembrete já autoriza aquela ação; pergunte apenas se o destinatário ou a ação
-estiverem ambíguos. Chame `assinafy_resend_notification` com:
-
-```json
-{
-  "document_id": "DOCUMENT_ID",
-  "assignment_id": "ASSIGNMENT_ID",
-  "signer_id": "SIGNER_ID"
-}
-```
-
-`is_sent: true` informa o resultado do reenvio; não significa que a pessoa
-assinou. Leia o histórico de entrega e o progresso depois. Não reenvie
-repetidamente só porque o progresso não mudou. Uma resposta incerta pode vir
-depois de um envio bem-sucedido; inspecione as atividades antes de tentar de
-novo. Respeite limites de taxa e o tempo de nova tentativa.
-
-### 4. Atualizar a expiração ou corrigir dados do destinatário
-
-Use `assinafy_set_assignment_expiration` com os IDs dos detalhes atuais do
-documento e um timestamp RFC 3339 explícito:
-
-```json
-{
-  "document_id": "DOCUMENT_ID",
-  "assignment_id": "ASSIGNMENT_ID",
-  "expires_at": "2027-01-31T23:59:59-03:00"
-}
-```
-
-Escolha a data e o fuso realmente pedidos pelo usuário; o exemplo ilustra apenas
-o formato. Leia o assignment atualizado para confirmar a data resultante. Não
-suponha que atualizar a expiração também enviou um novo convite.
-
-Encontre contatos por `assinafy_list_signers` ou `assinafy_get_signer`.
-`assinafy_update_signer` aceita `full_name`, `email`, `whatsapp_phone_number`
-e `government_id`. Salve CPF/CNPJ somente com autorização para verificação por
-certificado ou biometria. Um contato é compartilhado dentro do workspace, então revise a alteração
-pretendida antes de aplicá-la. A Assinafy bloqueia mudanças em um canal
-já verificado em um documento em andamento. Alterar um canal não verificado
-invalida links e códigos antigos; depois de uma correção bem-sucedida, use um
-reenvio autorizado para entregar o link novo. Preserve e informe uma recusa da
-Assinafy.
-
-### 5. Preparar e enviar um novo PDF
-
-Para o fluxo comum por e-mail, chame `assinafy_send_pdf_for_signature`:
-
-```json
-{
-  "file_name": "contrato.pdf",
-  "file_base64": "BYTES_DO_PDF_EM_BASE64",
-  "signers": [
-    {
-      "full_name": "Pessoa de Exemplo",
-      "email": "signer@example.invalid"
-    }
-  ],
-  "message": "Revise e assine o documento",
-  "max_wait_secs": 30
-}
-```
-
-O endereço é fictício. Informe apenas destinatários autorizados para a tarefa
-real. A ferramenta envia o PDF, aguarda o processamento, cria ou reutiliza
-contatos de e-mail e inicia um assignment com verificação e convite por Email.
-Guarde `document.id`, `assignment.id` e `signer_ids` do resultado.
-Uma chamada aceita no máximo 10 signatários e tem prazo total de `max_wait_secs`
-mais dois minutos.
-
-Para preparar antes de enviar, use esta sequência:
-
-1. `assinafy_upload_document` aceita `file_name` e `file_base64`, devolve um
-   documento e não envia convites. PDFs podem ter até 25 MiB e 2.000 páginas; a
-   Assinafy impõe o limite de páginas. O servidor MCP nunca abre um caminho de
-   arquivo local.
-2. `assinafy_get_document` confere a prontidão e fornece IDs e dimensões de
-   página. Use `assinafy_rename_document` com `document_id` e `name` enquanto
-   renomear é permitido: antes de existir um assignment, em `uploaded` ou
-   `metadata_ready`.
-3. `assinafy_list_signers` / `assinafy_create_signer` fornecem os IDs dos
-   signatários. Criar um contato sozinho não envia solicitação de assinatura. A
-   criação avulsa pode retornar conflito; procure o contato existente antes de
-   tentar de novo.
-4. `assinafy_create_assignment` inicia a assinatura do documento existente usando
-   os IDs de signatário. Consome a franquia de documentos da workspace e, no
-   WhatsApp, créditos de notificação — use os destinatários e a ação autorizados pelo usuário. Guarde o
-   assignment e as identidades retornadas para o acompanhamento.
-
-Exemplo de argumentos de `assinafy_create_assignment`:
-
-```json
-{
-  "document_id": "DOCUMENT_ID",
-  "method": "virtual",
-  "signers": [
-    {
-      "id": "SIGNER_ID",
-      "verification_method": "Email",
-      "notification_methods": [
-        "Email"
-      ],
-      "step": 1
-    }
-  ],
-  "message": "Revise e assine o documento"
-}
-```
-
-A ferramenta de assignment aceita `virtual` e `collect`, `copy_receivers`
-opcionais (IDs de signatário), `message`, `expires_at` e ordem de assinatura por
-`step`. Os métodos de verificação são `Email`, `Whatsapp`,
-`DigitalCertificate` e `IdDocumentFaceMatchBasic`; cada signatário usa exatamente
-um canal de notificação Email/WhatsApp compatível. WhatsApp exige o contato e o
-plano adequados. Certificado e biometria exigem o recurso habilitado na conta e
-CPF/CNPJ salvo no contato por uma atualização autorizada de `government_id`.
-Biometria exige CPF válido. A Assinafy valida a elegibilidade e os recursos
-atuais no envio.
-
-`DigitalCertificate` exige `method: "virtual"`. Uma chamada `collect` é recusada
-antes da estimativa ou do envio com
-`digital_certificate_requires_virtual`.
-
-Use `estimate_only: true` nas ferramentas de assinatura para consultar custos e
-saldos antes do envio. A prévia de um PDF novo envia e preserva o documento;
-reutilize seu ID com `assinafy_create_assignment` para solicitar assinaturas.
-As outras prévias não criam registros nem enviam mensagens. Veja
-[prévias de custo](#prévias-de-custo-e-verificação-de-identidade) e os
-[payloads completos de requisição e resposta](docs/tool-payloads.json).
-Reutilize a autorização do usuário para a ação pedida; pergunte apenas pelas
-escolhas de documento ou destinatário que ainda faltam. Não repita uma chamada
-só porque o progresso parece parado.
-
-Na assinatura ordenada, se um signatário informar `step`, todos precisam
-informar; os valores devem ser contíguos a partir de 1. Pessoas na mesma etapa
-assinam em paralelo. Um signatário com certificado digital fica sozinho na etapa
-dele.
-
-Para `collect`, aguarde `metadata_ready`. Use `assinafy_list_fields`
-(opcionalmente `include_standard: true`) e `assinafy_get_field` para as
-definições de campo. Passe `entries[]` com `page_id` e `fields[]`; cada
-posicionamento contém `signer_id`, `field_id` e `display_settings` com `left`,
-`top`, `width`, `height` e `fontSize`. As coordenadas usam os pixels da imagem da
-página em 150 DPI. O servidor recusa posicionamentos fora da página escolhida
-antes de criar o assignment. As prévias de página estão em
-`assinafy_download_document_page`.
-
-#### Validar valores de campo
-
-Use `assinafy_list_fields` e `assinafy_get_field` para inspecionar as definições
-e valide os valores propostos com `assinafy_validate_fields`:
-
-```json
-{
-  "values": [
-    {
-      "field_id": "ID_DO_CAMPO_NOME",
-      "value": "Empresa Exemplo"
-    },
-    {
-      "field_id": "ID_DO_CAMPO_TOTAL",
-      "value": "1250.00"
-    }
-  ]
-}
-```
-
-O MCP converte `values` no corpo em array JSON da API. A validação não cria
-documento nem envia convites. Verifique `success` e `error_message` de cada
-resultado; uma requisição HTTP bem-sucedida pode reportar um valor inválido.
-Mantenha como texto os identificadores com zeros à esquerda. O
-`editor_fields[].value` de template sempre recebe uma string, mesmo quando o
-valor representa número ou data.
-
-### 6. Gerar um documento a partir de um template
-
-Use `assinafy_list_templates` e leia seus papéis, páginas e campos de editor.
-`assinafy_get_template` oferece a consulta direta onde o ambiente suporta essa
-rota de compatibilidade. A resposta da listagem é a fonte documentada quando a
-rota individual não está disponível.
-
-Para um pedido como “preencha `customer_name` e `contract_total` no template de
-contrato de serviço”, resolva os nomes antes de criar qualquer coisa:
-
-1. Selecione o template pedido em `assinafy_list_templates`, seguindo a
-   paginação, e inspecione seu status de processamento, `roles` e
-   `pages[].fields`.
-2. Relacione os nomes pedidos aos `label` dos posicionamentos ou às definições
-   devolvidas por `assinafy_list_fields` / `assinafy_get_field`. Ligue o `id` da
-   definição ao `field_id` do posicionamento e confira o `role_id` do
-   posicionamento contra o papel de editor do template. Preencha apenas campos já
-   configurados naquele template.
-3. Use o **`field_id`** do posicionamento em `editor_fields` — não o `id` do
-   posicionamento nem seu rótulo. Nomes de campo são configuráveis; eles não são
-   nomes de argumento de ferramenta. O cliente faz esse mapeamento pelos
-   metadados; o servidor aceita IDs.
-4. Se os nomes faltarem ou forem ambíguos, peça ao usuário que identifique o
-   campo pretendido. Não adivinhe. Posicionamentos repetidos com o mesmo
-   `field_id` recebem um único valor; a API não oferece valor por posicionamento
-   nesta requisição.
-5. Valide os valores propostos e resolva um signatário por papel do template
-   antes da criação autorizada.
-
-Criação de template e edição de layout e papéis são documentadas apenas na API
-interna e não são expostas por este servidor. Configure o template salvo na
-Assinafy antes de usar o fluxo público de documento por template.
-
-`assinafy_create_document_from_template` preenche todos os papéis. Cada entrada
-traz o `id` de um signatário existente **ou** `full_name` e `email`, que o
-servidor cria ou reutiliza — um ou outro, nunca os dois na mesma entrada, de modo
-que uma única chamada combina signatários do diretório e contatos novos. As
-entradas também aceitam `verification_method`, `notification_methods` e `step`
-conforme documentado. Uma entrada resolvida por email usa verificação e
-notificação por Email. Notificação ou verificação por WhatsApp, certificado ou
-biometria exigem um `id` de signatário; prepare antes o contato autorizado. Cada
-entrada de template aceita no máximo um canal: `Email` ou `Whatsapp`. O servidor
-valida todas as entradas e a ordem completa antes de criar contatos. Se uma entrada
-usar `step`, todas usam; as etapas são contíguas desde 1 e quem assina com certificado
-fica sozinho na etapa. A Assinafy ainda valida os papéis, então uma falha posterior
-pode deixar contatos recém-criados.
-
-Templates com campos posicionados usam `collect` e não aceitam
-`DigitalCertificate`. O servidor confere templates com certificado e retorna
-`digital_certificate_requires_virtual` antes de estimar custos, criar contatos,
-gerar o documento ou enviar convites.
-
-A chamada aceita nome personalizado, mensagem, expiração, `tags` (**nomes** de
-tag, mesclados com os padrões do template) e `editor_fields` com
-`{field_id,value}`. A criação pode enviar convites e consome a franquia de
-documentos do workspace; use o documento e os destinatários autorizados pelo usuário. Guarde o ID do
-documento retornado e chame `assinafy_get_document` para o assignment e as
-conferências de status seguintes.
-
-Os argumentos de criação ficam assim (substitua pelos IDs descobertos no template
-e no diretório de signatários):
-
-```json
-{
-  "template_id": "TEMPLATE_ID",
-  "name": "Contrato de serviço.pdf",
-  "signers": [
-    {
-      "role_id": "ID_DO_PAPEL_EDITOR",
-      "id": "ID_DO_SIGNATARIO_PREPARADOR",
-      "step": 1
-    },
-    {
-      "role_id": "ID_DO_PAPEL_CLIENTE",
-      "full_name": "Cliente Exemplo",
-      "email": "cliente@example.com",
-      "step": 2
-    }
-  ],
-  "editor_fields": [
-    {
-      "field_id": "ID_DO_CAMPO_NOME",
-      "value": "Empresa Exemplo"
-    },
-    {
-      "field_id": "ID_DO_CAMPO_TOTAL",
-      "value": "1250.00"
-    }
-  ]
-}
-```
-
-As conferências de status, lembretes, mudanças de expiração e downloads seguintes
-usam os IDs do documento retornado, como em um PDF enviado.
-
-### 7. Inspecionar prévias de página
-
-`assinafy_download_document_page` recebe `document_id` e um `page_id` retornado.
-Devolve os bytes da imagem em base64. Baixe apenas as páginas necessárias.
-
-### 8. Baixar artefatos assinados e verificar
-
-Concluída a certificação, chame `assinafy_download_document` com o ID do
-documento e `artifact: "certificated"`. O resultado traz `document_id`, o nome do
-artefato e `base64`. Decodifique e salve os bytes pelas ferramentas de arquivo do
-cliente; não imprima um base64 grande na conversa.
-
-A ferramenta também aceita `original`, `certificated`, `certificate-page`,
-`pades` e `bundle`. A disponibilidade do artefato depende do ciclo de vida e do
-método de assinatura; um artefato indisponível não é um download bem-sucedido. As
-respostas binárias são limitadas a 64 MiB antes da codificação base64.
-O base64 é retornado apenas no resultado estruturado, com um resumo curto em texto.
-
-Chame `assinafy_verify_document` com o hash SHA-1 de assinatura do documento
-assinado. Use o hash de verificação real fornecido com o documento, não o ID do
-documento nem um valor inventado. Esta é a única ferramenta que funciona sem
-conectar: ela consulta um registro público de assinatura e não toca em nada
-pertencente a um workspace. Informe o `is_valid` retornado.
-
-As pessoas concluem assinaturas, recusas e verificações exigidas dentro da
-Assinafy. Esses endpoints usam o código de acesso do signatário, fora da
-concessão OAuth2 do workspace. Estas ferramentas não aceitam termos, não digitam
-códigos de verificação e não assinam no lugar de ninguém.
-
-### 9. Retomar uma operação parcial ou excluir
-
-Um envio de várias etapas pode falhar depois do upload. O erro preserva o ID do
-documento criado. Inspecione esse documento e suas atividades antes de
-continuar:
-
-- Um assignment existente indica que a solicitação de assinatura pode já ter dado
-  certo. Continue acompanhando; não crie outro assignment nem reenvie às cegas.
-- Um documento preparado sem assignment continua por
-  `assinafy_create_assignment` com os IDs de signatário confirmados. Não precisa
-  de novo upload. Confira o status de processamento antes de posicionar campos.
-- Se pedirem limpeza, use `assinafy_delete_document` apenas quando o estado atual
-  do documento permitir. Essa ação precisa de autorização do usuário.
-
-Nenhuma requisição de escrita é repetida automaticamente pelo servidor MCP.
-
-## Erros e reconexão
-
-| Resultado | Ação do cliente |
-|---|---|
-| HTTP 401 | Deixe o cliente renovar a concessão ou reconectar pelo consentimento da Assinafy. |
-| HTTP 403 com `insufficient_scope` | Autorize os escopos pedidos somados aos já concedidos e tente de novo após o consentimento. |
-| Erro de ferramenta nomeando um escopo ausente | A Assinafy recusou a chamada. Reconecte somando o escopo indicado; tentar de novo sem novo consentimento falha outra vez. Uma ferramenta de várias etapas pode ter concluído etapas anteriores; leia o erro em busca de um `document_id` preservado e continue dali. |
-| Resultado de ferramenta com `isError: true` | Leia o erro da Assinafy e inspecione o documento atual antes de repetir uma escrita. |
-| Contato inválido, assignment expirado ou artefato indisponível | Corrija a requisição ou aguarde o estado necessário do ciclo de vida. |
-| Limite de taxa ou resposta de rede incerta | Respeite o tempo de nova tentativa; inspecione o estado e o histórico de entrega antes de repetir uma escrita. |
-| HTTP 429 | A Assinafy está limitando as verificações de autorização; respeite o `Retry-After`. |
-| HTTP 503 na autenticação | Serviço temporariamente indisponível. Tente mais tarde; contate o suporte da Assinafy se persistir. |
-| Um cartão diz “Não foi possível concluir” | Esse clique não alterou nada; continue pelo chat, que consulta o estado atual primeiro. |
-
-Veja [erros e recuperação](docs/errors.md) e a [referência de entradas](docs/tools.md).
-
-## Verificar a conexão
-
-Atualize a lista de ferramentas no cliente após reconectar ou atualizar o cliente.
-Também é possível consultar o catálogo disponível sem entrar:
-
-```bash
-curl -sS -X POST https://mcp.assinafy.com.br/mcp \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
-```
-
-Se o login informar `invalid_target`, `invalid_client` ou falta de metadados do
-recurso, confira se a URL é exatamente `https://mcp.assinafy.com.br/mcp` e se o
-cliente está atualizado. Se persistir, contate o suporte da Assinafy com o nome
-e a versão do cliente e a mensagem de erro. Não inclua tokens ou credenciais.
-
-## Prévias de custo e verificação de identidade
-
-Use `estimate_only: true` nas ferramentas existentes de PDF, assignment, template
-e lembrete para consultar saldos e detalhamento de custos antes do envio. A
-prévia de PDF envia e preserva o documento; reutilize esse ID para solicitar
-assinaturas. As demais prévias não criam registros nem enviam mensagens.
-Estimativas não reservam créditos; a Assinafy verifica os recursos novamente no
-envio. Veja [o fluxo e os payloads](docs/tools.md#costs-within-the-signing-flow).
-
-A verificação biométrica usa `IdDocumentFaceMatchBasic` nas configurações de
-signatário do assignment ou template. Salve antes um CPF autorizado em
-`government_id` no contato. O signatário conclui as fotos de identificação e a
-prova de vida na Assinafy. A revisão manual ocorre lá pela conta responsável;
-as ferramentas de documento mostram `InReview` e `pending_identity_review`.
-Certificados ICP-Brasil A1/A3 usam `DigitalCertificate`; cada signatário com
-certificado fica sozinho na etapa de assinatura.
-
-Configure webhooks de conta na Assinafy, independentemente de MCP Events.
-Planos pagos aceitam até três endpoints. Salve o segredo retornado na criação
-com assinatura habilitada; aplicativos OAuth não podem recuperá-lo nem
-rotacioná-lo depois. O catálogo continua com 29 ferramentas, sem
-ferramentas separadas para custos, biometria ou administração de webhooks.
-Veja [verificação](docs/tools.md#biometric-and-certificate-verification) e
-[assinatura de webhooks](docs/tools.md#account-webhooks).
-
-## Contratos, renovações e lembretes
-
-Peça “Quais contratos ativos vencem nos próximos 30 dias?” ou “Revise a renovação
-deste contrato”. `assinafy_browse_contracts` consulta contratos (`list`), termos ou
-aditivos (`get`) e a família completa (`related`). Clientes compatíveis exibem o
-navegador de contratos; os demais recebem os mesmos dados em texto.
-
-`assinafy_update_contract` registra termos (`set`), inicia a próxima vigência
-(`renew`) ou encerra o acompanhamento (`terminate`), conforme a autorização do
-usuário. Leia antes e reutilize `updated_at`; a renovação também exige o `term`
-atual. Em conflito, consulte novamente e revise a alteração. Não repita escritas
-às cegas. Para mudanças que exigem assinatura, vincule um documento separado por
-`parent_document_id` e `relation_type` e use o fluxo de assinatura existente.
-
-A Assinafy executa os avisos de renovação, alertas de vencimento, e-mails ao
-responsável e renovação automática no ciclo horário, pelo calendário de Brasília.
-Configure `notice_period_days`, `auto_renew` e `renewal_term_months` conforme
-autorizado. Esses prazos são diferentes do prazo para assinar o documento.
-Clientes compatíveis podem acompanhar `contract.activity`, mantendo a conexão
-OAuth e a inscrição renovadas. Um evento não autoriza renovar, encerrar ou enviar
-outra mensagem. Alterações exigem um plano com gestão de contratos; consultas
-continuam disponíveis sem ele. Veja [o fluxo de contratos](docs/tools.md#contract-management-clm)
-e [MCP Events](docs/events.md#contract-lifecycle-events).
+`make verify` executa formatação, consistência de módulos, vet, testes com race,
+build e vulnerabilidades alcançáveis. Testes de transporte cobrem as 29 ferramentas
+e versões MCP suportadas; testes de payload validam todos os schemas e exemplos.
+Integrações com tag exigem credenciais em runtime e destinatário expressamente
+autorizado; credenciais sozinhas não autorizam envios, cobranças ou mutações remotas.
+
+No release, renderize o Helm privado, injete credenciais pelo gerenciador de segredos
+e mantenha tokens, documentos, certificados e dados reais fora do código, logs e docs.

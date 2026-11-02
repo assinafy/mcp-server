@@ -1,8 +1,52 @@
 # MCP Events
 
-The hosted server advertises Events only when its operator has enabled persistent
-monitoring. Clients must refresh their OAuth connection and subscriptions;
-Assinafy owner emails operate independently.
+This server implements the [OpenAI MCP Events integration](https://developers.openai.com/plugins/build/mcp-events)
+for MCP 2.0 (`2026-07-28`). ChatGPT Work can monitor a document and act when
+its status changes, its certificated artifacts become ready, or contract lifecycle
+activities are recorded.
+
+This is an advertised extension with `events/list`, `events/subscribe`, and
+`events/unsubscribe`, not the core MCP subscription API. Clients discover it
+through the `events` capability in `server/discover`.
+
+## Enable
+
+Set `MCP_EVENTS_STORE` to a JSON file on persistent storage writable by the
+server user, for example `/app/data/events/events.json`. Leave it empty to
+disable Events. The server advertises `events` in `server/discover` only when
+enabled, and only then do `events/*` methods exist or require OAuth scopes.
+Existing tools and older MCP clients continue to work.
+
+The store's *directory* must be writable and persistent: every save writes a
+temporary file beside the store and renames it into place. Mount a directory,
+not a single file, and do not point the path at a symlink; the server checks
+both at startup and refuses to enable Events otherwise.
+
+Use one server replica for the Events store. A process lock prevents two processes
+from using the same file. A process that finds the lock held still starts and
+serves every tool; it takes the store over within 30 seconds of the holder
+exiting, and until then `events/*` return a retryable error. With Kubernetes,
+prefer the `Recreate` strategy (or a StatefulSet) so the old and new pods do not
+overlap for long. Different store files do not share subscriptions, so
+multiple replicas need a shared subscription database and delivery queue before
+enabling this feature. The store is written atomically with permissions `0600`;
+it contains callback signing secrets and must be protected like a secret. Keep it
+outside the source checkout and back it up securely. OAuth tokens are never written
+to the store. Events requires outbound HTTPS and DNS access.
+
+### Deployment checklist
+
+`values.production.yml` leaves Events disabled until durable storage is mounted.
+The image creates `/app/data/events`, owned by uid/gid `65532`. To enable Events:
+
+1. Mount a persistent volume at `/app/data/events`, writable by uid/gid `65532`
+   (`fsGroup: 65532`). With a ReadWriteOnce volume, also set
+   `strategy: {type: Recreate}` on the `mcp` web entry so a rolling update does
+   not wait on the volume attachment. Pin the deployment to one replica.
+2. Set `MCP_EVENTS_STORE: "/app/data/events/events.json"` only after the mount is
+   present. Never use the container filesystem for the production store.
+3. Allow egress over HTTPS and DNS to the public internet, because ChatGPT
+   supplies the callback URLs.
 
 ## Events and subscription methods
 

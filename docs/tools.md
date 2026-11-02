@@ -46,8 +46,8 @@ operation outside that request.
 Authorization is lazy: connecting, listing tools and public verification work
 without a token. Workspace operations use the caller's OAuth grant. The workspace
 is discovered automatically; `account_id` may repeat it but cannot override it.
-See [authentication](../README.en.md#workspaces-and-permissions) for scopes and
-[the client guide](../README.en.md#conversational-behavior) for chat flows.
+See [authentication](authentication.md) for scopes and
+[the client guide](../MCP_CLIENT_DOCUMENTATION.md#conversational-behavior) for chat flows.
 
 ## Complete payloads
 
@@ -122,7 +122,7 @@ own callbacks and do not modify these account endpoints.
 |---|---|---|
 | `assinafy_list_documents` | None | `page`, `per_page`, `search`, `sort`, `status`, `method`, `tags`, `account_id` |
 | `assinafy_get_document` | `document_id` | None |
-| `assinafy_list_document_activities` | `document_id` | None |
+| `assinafy_list_document_activities` | `document_id` | `sort` (`-id` or `id`), `page`, `per_page` |
 | `assinafy_list_whatsapp_notifications` | `document_id`, `assignment_id` | None |
 
 `assinafy_list_documents` returns `{data:[...]}` with pagination `meta` when
@@ -131,8 +131,11 @@ supplied by Assinafy. Pages start at 1; `per_page` is capped upstream at 100.
 user's description to a specific document, then use `assinafy_get_document` for
 its status, pages, artifacts, assignment and signers.
 `assinafy_list_document_activities` returns event-specific payloads and request
-origin information; `assinafy_list_whatsapp_notifications` returns WhatsApp
-delivery details. Email delivery history is in the document's assignment signer records.
+origin information, newest first by default, with up to 100 entries per page.
+`assinafy_list_whatsapp_notifications` returns WhatsApp delivery details. Email
+delivery history is in the document's assignment signer records. A document
+response can also include `verification_code`, `verification_url`, and, on an
+eligible workspace detail response, `has_contract`.
 
 ```json
 {"search":"Service agreement","status":"pending_signature"}
@@ -284,11 +287,13 @@ Both tools take the actual document and assignment IDs:
 | Tool | Required | Result |
 |---|---|---|
 | `assinafy_resend_notification` | `document_id`, `assignment_id`, `signer_id` | Notification result; `is_sent` does not mean signed |
-| `assinafy_set_assignment_expiration` | `document_id`, `assignment_id`, RFC 3339 `expires_at` | Updated assignment |
+| `assinafy_set_assignment_expiration` | `document_id`, `assignment_id`, ISO 8601 `expires_at` or `null` | Updated assignment |
 
 Inspect current pending signers before an authorized reminder. Each resend may
 consume notification credits; an uncertain response requires inspection before
-retrying. Changing expiration does not imply that a reminder was sent.
+retrying. A date alone expires at 23:59 UTC; a date-time without an offset is
+read as UTC, and `null` removes the expiration. Changing expiration does not
+imply that a reminder was sent.
 
 ## Find and save contacts
 
@@ -303,10 +308,13 @@ Resolve exact contacts and clarify ambiguous matches before sending.
 
 Saving a contact sends no signing request. Standalone creation may return a
 conflict; look up the existing contact before retrying. Contacts are shared in
-the workspace. Assinafy restricts edits to channels already verified on an
-in-flight document. Updating an unverified channel invalidates old links/codes;
-use an authorized reminder only after a successful correction. Save CPF/CNPJ in `government_id` only when authorized for certificate or biometric
-verification. Assinafy normalizes and validates the value; treat it as sensitive data.
+the workspace. On update, `null` or an empty string clears `email`,
+`whatsapp_phone_number`, or `government_id`; `full_name` cannot be cleared.
+Assinafy restricts edits to channels already verified on an in-flight document.
+Updating an unverified channel invalidates old links/codes; use an authorized
+reminder only after a successful correction. Save CPF/CNPJ in `government_id`
+only when authorized for certificate or biometric verification. Assinafy
+normalizes and validates the value; treat it as sensitive data.
 
 ## Discover saved templates
 
@@ -416,7 +424,7 @@ Collection and empty fixed-operation responses use `{data: ...}` with pagination
 use `isError: true` and retain Assinafy's status/message where supplied.
 
 The fixed operations use only methods, routes, query parameters and body fields from
-[the documented schemas](tool-payloads.json). Callers cannot
+[document_operations.json](../tools/document_operations.json). Callers cannot
 supply arbitrary URLs, HTTP methods or credentials. Path identifiers reject
 empty values, separators, percent escapes, query/fragment characters, traversal and control
 characters. The MCP SDK validates all input schemas.
@@ -424,7 +432,7 @@ characters. The MCP SDK validates all input schemas.
 Writes are never retried automatically. After an uncertain send, inspect the
 retained document before deciding what to do. Use `assinafy_create_assignment`
 only if no assignment exists and its state permits signing. See [errors](errors.md)
-for recovery and [the public API](https://api.assinafy.com.br/v1/docs) for capabilities outside this catalog.
+for recovery and [API coverage](api-coverage.md) for capabilities outside this catalog.
 
 ## Contract management (CLM)
 

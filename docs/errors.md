@@ -56,7 +56,7 @@ no scopes without being listed as public. Resource registration alone does not
 satisfy the new token-separation contract; deploy the API capabilities and inject
 the operator credentials before upgrading from v3.0.1.
 `/healthz` reports only that this process is serving; it is
-deliberately independent of Assinafy. See [authentication](../README.en.md#workspaces-and-permissions).
+deliberately independent of Assinafy. See [authentication](authentication.md).
 
 ## MCP Events
 
