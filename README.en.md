@@ -9,11 +9,10 @@ contract is the [Assinafy API reference](https://api.assinafy.com.br/v1/docs).
 
 ## Connect
 
-The server is an OAuth 2.1 resource server. The client discovers protected-resource
-metadata, registers through CIMD, opens browser consent with PKCE S256, and stores
-and refreshes its own token. A connection selects one Assinafy workspace. The MCP
-validates issuer, audience, expiry, workspace, and scopes, then exchanges that token
-for a separate short-lived API token. Operator OAuth credentials remain server-side.
+Add `https://mcp.assinafy.com.br/mcp` as a remote MCP connection in your client.
+Sign in to Assinafy in your browser, choose the workspace, and authorize the
+permissions you need. Your client maintains the OAuth connection and refreshes
+access. Use the option below that matches your client:
 
 ```bash
 codex mcp add assinafy --url https://mcp.assinafy.com.br/mcp
@@ -27,6 +26,105 @@ Scopes are `account:read`, `documents:read`, `documents:write`, `templates:read`
 and `templates:write`; a client may approve a smaller set. See
 [authentication](docs/authentication.md). You do not need an API key or your own
 OAuth application credentials to connect.
+
+## Try it in your client
+
+After connecting, copy these prompts into your assistant conversation. Use a PDF
+without sensitive data and a recipient who authorized the test. Replace
+`signer@example.invalid` with that authorized email: the example address is
+fictional and cannot receive messages. Real sends and reminders may use credits.
+
+### 1. Check the connection without sending anything
+
+> List up to five recent documents in my workspace with their names, IDs, and
+> statuses. Do not change or send any documents.
+
+**Expected result:** documents from the selected workspace, or an empty list.
+For authorization errors, see [authentication](docs/authentication.md).
+Then ask: “Show pending signers and activities for document ID.”
+Replace `ID` with the returned value; the assistant should clarify duplicate names.
+
+### 2. Prepare a PDF, check the cost, and send by email
+
+Attach `signing-test.pdf` in a client that can provide files to MCP tools:
+
+> Prepare this PDF for Email signing by Example Signer,
+> signer@example.invalid. Estimate the cost without sending invitations. Show
+> the document ID, required credits, and anything preventing the send.
+
+**Expected result:** an uploaded document and a cost estimate, without new
+contacts or invitations. The PDF estimate uploads the file; keep the document ID.
+After reviewing the result, replace `ID` and `LIMIT` with your chosen values:
+
+> Send the prepared document ID to Example Signer,
+> signer@example.invalid, using Email, with a total limit of LIMIT credits.
+> Reuse the document; do not upload it again.
+
+**Expected result:** document and assignment IDs, with the signers.
+The recipient receives the invitation and signs in Assinafy. Do not repeat the
+send after a timeout: read the document and check whether an assignment exists.
+
+### 3. Use a saved template
+
+> List my templates. For the template I choose, show the signer roles and fields
+> I need to fill in before creating a document.
+
+After choosing a template and supplying all required role and field values:
+
+> Estimate the cost of this template with the recipients and values provided.
+> Do not create or send the document yet.
+
+**Expected result:** roles/fields and a cost estimate. To send, ask
+“Create and send with these values, with a total limit of LIMIT credits.”
+Keep the returned ID and wait for processing before checking signatures.
+
+### 4. Try another signing method
+
+For a prepared document without an assignment, choose the method explicitly:
+
+| Method | Example request |
+|---|---|
+| WhatsApp | “Estimate WhatsApp signing for document ID by the selected contact, with WhatsApp notification.” |
+| A1/A3 certificate | “Estimate digital certificate signing for document ID by the selected contact, with Email notification.” |
+| Biometrics | “Estimate ID-document and facial verification signing for document ID by the selected contact, with Email notification.” |
+
+**Expected result:** cost and eligibility, or the API's reason it cannot proceed.
+Check the contact's phone number for WhatsApp and government ID (CPF/CNPJ) for
+certificate or biometric signing. After reviewing, request the send using the
+same method and a credit limit. Certificate signers must be alone in their step.
+The person provides their certificate, photos, and liveness check in Assinafy,
+never to the assistant.
+
+### 5. Track, remind, and download the result
+
+> Check document ID and tell me who still needs to sign. Show recent activities
+> and the available notification history.
+
+For a reminder: “Estimate the cost of reminding the selected pending signer on
+document ID.” After reviewing, ask “Send that reminder.”
+
+> When document ID is certificated, download the signed PDF and verify its
+> authenticity using the verification code returned by Assinafy.
+
+**Expected result:** current status; after certification, the file and verification
+result. Your client must be able to save the file returned by the MCP tool.
+If signatures are still pending, check again later or use Events below.
+At `pending_identity_review`, the account must review the evidence in Assinafy.
+
+### 6. Receive Events and inspect contracts
+
+> Monitor document ID and notify me when it is certificated.
+
+**Expected result:** a subscription in an Events-capable client and a notification
+when a new certification occurs while monitoring. Keep the connection active.
+If the client does not support Events, ask for another status check;
+the prompt alone does not enable background monitoring.
+
+> List my tracked contracts and show the terms and end date of the contract
+> I choose. Do not renew or terminate anything.
+
+**Expected result:** current terms, or a notice that the plan does not include
+this feature. A contract's end date is different from its signing deadline.
 
 ## Complete signing flow
 
@@ -57,12 +155,6 @@ OAuth application credentials to connect.
 8. Wait for `certificated`, download the requested base64 artifact, and optionally
    pass the `verification_code` from `assinafy_get_document` unchanged to
    `assinafy_verify_document`. Do not compute a hash of the PDF.
-
-Synthetic email example:
-
-```json
-{"file_name":"agreement.pdf","file_base64":"<BASE64_PDF>","signers":[{"full_name":"Example Signer","email":"signer@example.invalid"}]}
-```
 
 `assinafy_update_signer` accepts null or an empty string to clear email, WhatsApp,
 or government ID. `assinafy_set_assignment_expiration` accepts an ISO 8601 date or
